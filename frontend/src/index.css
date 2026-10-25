@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --color-page: #0c141f;
+  --color-header: #0f1925;
+  --color-panel: #111b29;
+  --color-card: #16233a;
+  --color-video: #0a111a;
+  --color-line: #1f2f44;
+  --color-line-strong: #24354c;
+  --color-ink: #e7eef6;
+  --color-ink-2: #c3cfdc;
+  --color-muted: #8c9db2;
+  --color-sup: #f2b04a;
+  --color-unsup: #5aa9f2;
+  --color-alarm: #ff6b6b;
+  --color-healthy: #4ed3a3;
+
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-cond: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--color-page);
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-unsup);
+    outline-offset: 2px;
+  }
+}
+
+/* Slow red glow on the tile that shows a live anomaly. */
+@keyframes live-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 22px 2px rgba(255, 107, 107, 0.45);
+  }
+}
+
+.live-glow {
+  animation: live-glow 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-glow {
+    animation: none;
+    box-shadow: 0 0 14px 1px rgba(255, 107, 107, 0.3);
+  }
+}
+
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #24354c transparent;
+}
+
+/* Keep placeholder scene lines hairline-thin at every tile size. */
+.scene-lines * {
+  vector-effect: non-scaling-stroke;
+}

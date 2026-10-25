@@ -1,0 +1,72 @@
+[
+  {
+    "id": "cam5",
+    "name": "Workshop",
+    "stream_url": "rtsp://10.0.0.15:554/stream1",
+    "people_count": 4,
+    "to_review": 0,
+    "supervised": "on",
+    "unsupervised": "ready",
+    "learning_progress": null
+  },
+  {
+    "id": "cam1",
+    "name": "Gate crossing",
+    "stream_url": "rtsp://10.0.0.11:554/stream1",
+    "people_count": 0,
+    "to_review": 0,
+    "supervised": "on",
+    "unsupervised": "collecting",
+    "learning_progress": null
+  },
+  {
+    "id": "cam2",
+    "name": "North sidewalk",
+    "stream_url": "rtsp://10.0.0.12:554/stream1",
+    "people_count": 1,
+    "to_review": 9,
+    "supervised": "on",
+    "unsupervised": "ready",
+    "learning_progress": null
+  },
+  {
+    "id": "cam3",
+    "name": "Bar floor",
+    "stream_url": "rtsp://10.0.0.13:554/stream1",
+    "people_count": 2,
+    "to_review": 4,
+    "supervised": "on",
+    "unsupervised": "ready",
+    "learning_progress": null
+  },
+  {
+    "id": "cam4",
+    "name": "Porch",
+    "stream_url": "rtsp://10.0.0.14:554/stream1",
+    "people_count": 1,
+    "to_review": 10,
+    "supervised": "on",
+    "unsupervised": "ready",
+    "learning_progress": null
+  },
+  {
+    "id": "cam-201-a",
+    "name": "Plaza east",
+    "stream_url": "rtsp://10.0.2.1:554/onvif1",
+    "people_count": 4,
+    "to_review": 0,
+    "supervised": "off",
+    "unsupervised": "learning",
+    "learning_progress": 0.67
+  },
+  {
+    "id": "cam-204-a",
+    "name": "Parking lot",
+    "stream_url": "rtsp://10.0.2.4:554/onvif1",
+    "people_count": 0,
+    "to_review": 0,
+    "supervised": "on",
+    "unsupervised": "learning",
+    "learning_progress": 0.64
+  }
+]
