@@ -1,0 +1,461 @@
+{
+  "verified_at": "2026-10-26",
+  "notes": "Every entry below was checked on the verified_at date: the download link answers without registration and the size is the real Content-Length. Clips are converted to H.264 MP4 on import.",
+  "anomaly_types": {
+    "fall": "Fall",
+    "fight": "Fight",
+    "running": "Running",
+    "unusual_motion": "Unusual motion",
+    "abnormal_object": "Abnormal object",
+    "normal": "Normal"
+  },
+  "datasets": [
+    {
+      "id": "ur-fall",
+      "name": "UR Fall Detection Dataset",
+      "description": "70 short indoor sequences recorded with a Kinect in an office at the University of Rzeszow: 30 falls and 40 everyday activities such as walking, sitting down, lying on a bed and picking things up. Only the RGB half of each video is kept.",
+      "anomaly_types": [
+        "fall"
+      ],
+      "has_normal": true,
+      "clip_count": 70,
+      "size_bytes": 96963523,
+      "license": "CC BY-NC-SA 4.0 (non-commercial academic use)",
+      "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "source_url": "https://fenix.ur.edu.pl/~mkepski/ds/uf.html",
+      "citation": "B. Kwolek, M. Kepski. Human fall detection on embedded platform using depth maps and wireless accelerometer. Computer Methods and Programs in Biomedicine 117(3), 2014.",
+      "importer": "ur_fall",
+      "download": {
+        "kind": "files",
+        "files": [
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-01-cam0.mp4",
+            "name": "fall-01-cam0.mp4",
+            "size_bytes": 1299104
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-02-cam0.mp4",
+            "name": "fall-02-cam0.mp4",
+            "size_bytes": 878005
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-03-cam0.mp4",
+            "name": "fall-03-cam0.mp4",
+            "size_bytes": 1756850
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-04-cam0.mp4",
+            "name": "fall-04-cam0.mp4",
+            "size_bytes": 754417
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-05-cam0.mp4",
+            "name": "fall-05-cam0.mp4",
+            "size_bytes": 1232883
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-06-cam0.mp4",
+            "name": "fall-06-cam0.mp4",
+            "size_bytes": 780369
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-07-cam0.mp4",
+            "name": "fall-07-cam0.mp4",
+            "size_bytes": 1250353
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-08-cam0.mp4",
+            "name": "fall-08-cam0.mp4",
+            "size_bytes": 706875
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-09-cam0.mp4",
+            "name": "fall-09-cam0.mp4",
+            "size_bytes": 1493300
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-10-cam0.mp4",
+            "name": "fall-10-cam0.mp4",
+            "size_bytes": 1037824
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-11-cam0.mp4",
+            "name": "fall-11-cam0.mp4",
+            "size_bytes": 1047151
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-12-cam0.mp4",
+            "name": "fall-12-cam0.mp4",
+            "size_bytes": 861145
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-13-cam0.mp4",
+            "name": "fall-13-cam0.mp4",
+            "size_bytes": 657267
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-14-cam0.mp4",
+            "name": "fall-14-cam0.mp4",
+            "size_bytes": 444232
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-15-cam0.mp4",
+            "name": "fall-15-cam0.mp4",
+            "size_bytes": 534994
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-16-cam0.mp4",
+            "name": "fall-16-cam0.mp4",
+            "size_bytes": 395666
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-17-cam0.mp4",
+            "name": "fall-17-cam0.mp4",
+            "size_bytes": 740530
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-18-cam0.mp4",
+            "name": "fall-18-cam0.mp4",
+            "size_bytes": 477123
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-19-cam0.mp4",
+            "name": "fall-19-cam0.mp4",
+            "size_bytes": 782681
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-20-cam0.mp4",
+            "name": "fall-20-cam0.mp4",
+            "size_bytes": 877877
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-21-cam0.mp4",
+            "name": "fall-21-cam0.mp4",
+            "size_bytes": 393784
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-22-cam0.mp4",
+            "name": "fall-22-cam0.mp4",
+            "size_bytes": 402611
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-23-cam0.mp4",
+            "name": "fall-23-cam0.mp4",
+            "size_bytes": 571987
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-24-cam0.mp4",
+            "name": "fall-24-cam0.mp4",
+            "size_bytes": 435178
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-25-cam0.mp4",
+            "name": "fall-25-cam0.mp4",
+            "size_bytes": 664556
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-26-cam0.mp4",
+            "name": "fall-26-cam0.mp4",
+            "size_bytes": 442210
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-27-cam0.mp4",
+            "name": "fall-27-cam0.mp4",
+            "size_bytes": 715302
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-28-cam0.mp4",
+            "name": "fall-28-cam0.mp4",
+            "size_bytes": 493653
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-29-cam0.mp4",
+            "name": "fall-29-cam0.mp4",
+            "size_bytes": 794004
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/fall-30-cam0.mp4",
+            "name": "fall-30-cam0.mp4",
+            "size_bytes": 522525
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-01-cam0.mp4",
+            "name": "adl-01-cam0.mp4",
+            "size_bytes": 1194846
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-02-cam0.mp4",
+            "name": "adl-02-cam0.mp4",
+            "size_bytes": 1448005
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-03-cam0.mp4",
+            "name": "adl-03-cam0.mp4",
+            "size_bytes": 1451527
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-04-cam0.mp4",
+            "name": "adl-04-cam0.mp4",
+            "size_bytes": 1209093
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-05-cam0.mp4",
+            "name": "adl-05-cam0.mp4",
+            "size_bytes": 1436668
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-06-cam0.mp4",
+            "name": "adl-06-cam0.mp4",
+            "size_bytes": 1847269
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-07-cam0.mp4",
+            "name": "adl-07-cam0.mp4",
+            "size_bytes": 1452738
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-08-cam0.mp4",
+            "name": "adl-08-cam0.mp4",
+            "size_bytes": 1451956
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-09-cam0.mp4",
+            "name": "adl-09-cam0.mp4",
+            "size_bytes": 1193373
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-10-cam0.mp4",
+            "name": "adl-10-cam0.mp4",
+            "size_bytes": 2472849
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-11-cam0.mp4",
+            "name": "adl-11-cam0.mp4",
+            "size_bytes": 2463501
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-12-cam0.mp4",
+            "name": "adl-12-cam0.mp4",
+            "size_bytes": 2069098
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-13-cam0.mp4",
+            "name": "adl-13-cam0.mp4",
+            "size_bytes": 2208233
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-14-cam0.mp4",
+            "name": "adl-14-cam0.mp4",
+            "size_bytes": 1954831
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-15-cam0.mp4",
+            "name": "adl-15-cam0.mp4",
+            "size_bytes": 2284264
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-16-cam0.mp4",
+            "name": "adl-16-cam0.mp4",
+            "size_bytes": 1991883
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-17-cam0.mp4",
+            "name": "adl-17-cam0.mp4",
+            "size_bytes": 1901302
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-18-cam0.mp4",
+            "name": "adl-18-cam0.mp4",
+            "size_bytes": 2207687
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-19-cam0.mp4",
+            "name": "adl-19-cam0.mp4",
+            "size_bytes": 2120189
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-20-cam0.mp4",
+            "name": "adl-20-cam0.mp4",
+            "size_bytes": 2246600
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-21-cam0.mp4",
+            "name": "adl-21-cam0.mp4",
+            "size_bytes": 2334630
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-22-cam0.mp4",
+            "name": "adl-22-cam0.mp4",
+            "size_bytes": 1989087
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-23-cam0.mp4",
+            "name": "adl-23-cam0.mp4",
+            "size_bytes": 1820847
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-24-cam0.mp4",
+            "name": "adl-24-cam0.mp4",
+            "size_bytes": 549317
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-25-cam0.mp4",
+            "name": "adl-25-cam0.mp4",
+            "size_bytes": 866916
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-26-cam0.mp4",
+            "name": "adl-26-cam0.mp4",
+            "size_bytes": 772272
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-27-cam0.mp4",
+            "name": "adl-27-cam0.mp4",
+            "size_bytes": 799390
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-28-cam0.mp4",
+            "name": "adl-28-cam0.mp4",
+            "size_bytes": 648948
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-29-cam0.mp4",
+            "name": "adl-29-cam0.mp4",
+            "size_bytes": 997498
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-30-cam0.mp4",
+            "name": "adl-30-cam0.mp4",
+            "size_bytes": 3306896
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-31-cam0.mp4",
+            "name": "adl-31-cam0.mp4",
+            "size_bytes": 2013943
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-32-cam0.mp4",
+            "name": "adl-32-cam0.mp4",
+            "size_bytes": 1666663
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-33-cam0.mp4",
+            "name": "adl-33-cam0.mp4",
+            "size_bytes": 1636974
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-34-cam0.mp4",
+            "name": "adl-34-cam0.mp4",
+            "size_bytes": 1572319
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-35-cam0.mp4",
+            "name": "adl-35-cam0.mp4",
+            "size_bytes": 2317434
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-36-cam0.mp4",
+            "name": "adl-36-cam0.mp4",
+            "size_bytes": 2797589
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-37-cam0.mp4",
+            "name": "adl-37-cam0.mp4",
+            "size_bytes": 2897423
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-38-cam0.mp4",
+            "name": "adl-38-cam0.mp4",
+            "size_bytes": 2904677
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-39-cam0.mp4",
+            "name": "adl-39-cam0.mp4",
+            "size_bytes": 2236255
+          },
+          {
+            "url": "https://fenix.ur.edu.pl/~mkepski/ds/data/adl-40-cam0.mp4",
+            "name": "adl-40-cam0.mp4",
+            "size_bytes": 2784077
+          }
+        ]
+      }
+    },
+    {
+      "id": "fight-surv",
+      "name": "Surveillance Camera Fight Dataset",
+      "description": "300 two-second clips: 150 fights found in surveillance footage on YouTube (cafes, streets, buses, shops) and 150 non-fight clips from ordinary surveillance cameras.",
+      "anomaly_types": [
+        "fight"
+      ],
+      "has_normal": true,
+      "clip_count": 300,
+      "size_bytes": 88442880,
+      "license": "MIT",
+      "license_url": "https://github.com/seymanurakti/fight-detection-surv-dataset/blob/master/LICENSE",
+      "source_url": "https://github.com/seymanurakti/fight-detection-surv-dataset",
+      "citation": "S. Akti, G. A. Tataroglu, H. K. Ekenel. Vision-based Fight Detection from Surveillance Cameras. IPTA 2019.",
+      "importer": "fight_surv",
+      "download": {
+        "kind": "archive",
+        "format": "zip",
+        "filename": "fight-detection-surv-dataset-master.zip",
+        "url": "https://codeload.github.com/seymanurakti/fight-detection-surv-dataset/zip/refs/heads/master"
+      }
+    },
+    {
+      "id": "avenue",
+      "name": "CUHK Avenue Dataset",
+      "description": "37 videos from one fixed camera on a campus avenue. The 16 training videos show only normal walking; the 21 test videos add running, throwing bags and papers, dancing and walking in the wrong direction.",
+      "anomaly_types": [
+        "running",
+        "unusual_motion",
+        "abnormal_object"
+      ],
+      "has_normal": true,
+      "clip_count": 37,
+      "size_bytes": 813227845,
+      "license": "Free for research, no explicit license. Cite the paper.",
+      "license_url": null,
+      "source_url": "https://www.cse.cuhk.edu.hk/leojia/projects/detectabnormal/dataset.html",
+      "citation": "C. Lu, J. Shi, J. Jia. Abnormal Event Detection at 150 FPS in MATLAB. ICCV 2013.",
+      "importer": "avenue",
+      "download": {
+        "kind": "archive",
+        "format": "zip",
+        "filename": "Avenue_Dataset.zip",
+        "url": "https://www.cse.cuhk.edu.hk/leojia/projects/detectabnormal/Avenue_Dataset.zip"
+      }
+    },
+    {
+      "id": "ucsd",
+      "name": "UCSD Anomaly Detection Dataset",
+      "description": "98 clips of about 200 frames from two elevated cameras over pedestrian walkways (Ped1 and Ped2). Training clips contain only pedestrians; test clips include bikers, skaters, small carts, wheelchairs and people crossing the grass.",
+      "anomaly_types": [
+        "unusual_motion",
+        "abnormal_object"
+      ],
+      "has_normal": true,
+      "clip_count": 98,
+      "size_bytes": 740306953,
+      "license": "Free for research, no explicit license. Cite the paper.",
+      "license_url": null,
+      "source_url": "http://www.svcl.ucsd.edu/projects/anomaly/dataset.htm",
+      "citation": "V. Mahadevan, W. Li, V. Bhalodia, N. Vasconcelos. Anomaly Detection in Crowded Scenes. CVPR 2010.",
+      "importer": "ucsd",
+      "download": {
+        "kind": "archive",
+        "format": "tar.gz",
+        "filename": "UCSD_Anomaly_Dataset.tar.gz",
+        "url": "http://www.svcl.ucsd.edu/projects/anomaly/UCSD_Anomaly_Dataset.tar.gz"
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "name": "Multiple Cameras Fall Dataset (Universite de Montreal)",
+      "source_url": "https://www.iro.umontreal.ca/~labimage/Dataset/",
+      "reason": "Downloads without registration but is 3.8 GB, above the 2 GB limit."
+    }
+  ]
+}

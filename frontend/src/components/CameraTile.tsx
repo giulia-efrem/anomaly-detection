@@ -1,57 +1,88 @@
-import { supervisedChip, unsupervisedChip, type ChipState } from '../lib/format'
-import { cameraScenes } from '../mock/scenes'
+import { supervisedChip, unsupervisedChip } from '../lib/format'
 import type { Camera } from '../types'
-import { PersonIcon } from './Icons'
-import Scene from './Scene'
-import StatusDot from './StatusDot'
+import { Chip, Pill } from '../ui/Chip'
+import StatusDot from '../ui/StatusDot'
+import CameraStream from './CameraStream'
 
-export function ModelChip({ chip, color }: { chip: ChipState; color: string }) {
+const HEALTH: Record<Camera['status'], string> = {
+  live: 'var(--color-healthy)',
+  connecting: 'var(--color-muted)',
+  offline: '#5F7189',
+}
+
+export function ModelChips({ camera, compact = false }: { camera: Camera; compact?: boolean }) {
+  const sup = supervisedChip(camera)
+  const unsup = unsupervisedChip(camera)
+  const full = (
+    <>
+      <Chip onVideo dot="var(--color-sup)" active={sup.active}>
+        {sup.label}
+      </Chip>
+      <Chip onVideo dot="var(--color-unsup)" active={unsup.active}>
+        {unsup.label}
+      </Chip>
+    </>
+  )
+  if (!compact) return full
+  // Narrow tiles: one chip with both model dots, so the video stays visible.
   return (
-    <span className="inline-flex h-[22px] items-center gap-1.5 rounded-md border border-[#2A3D57] bg-[rgba(8,14,22,0.72)] px-2 font-cond text-[12px] whitespace-nowrap text-ink-2">
-      <StatusDot color={color} active={chip.active} size={7} />
-      {chip.label}
-    </span>
+    <>
+      <span className="@[220px]:hidden" title={`${sup.label}, ${unsup.label}`}>
+        <Chip onVideo className="gap-1">
+          <StatusDot color="var(--color-sup)" active={sup.active} size={7} />
+          <StatusDot color="var(--color-unsup)" active={unsup.active} size={7} />
+          <span className="sr-only">{`${sup.label}, ${unsup.label}`}</span>
+        </Chip>
+      </span>
+      <span className="hidden @[220px]:contents">{full}</span>
+    </>
   )
 }
 
-export function PeopleCount({ count }: { count: number }) {
+export function CameraTitle({ camera, large = false }: { camera: Camera; large?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1 font-cond text-[13px] text-ink-2" aria-label={`${count} people`}>
-      <PersonIcon size={14} />
-      {count}
-    </span>
+    <div className="min-w-0">
+      <div className="flex items-center gap-2">
+        <StatusDot color={HEALTH[camera.status]} active={camera.status === 'live'} size={8} />
+        <h3 className={large ? 'truncate text-[17px] leading-6 font-semibold' : 'truncate text-[14px] leading-5 font-semibold'}>
+          {camera.name}
+        </h3>
+        {large && <span className="font-cond text-[13px] text-muted">{camera.id}</span>}
+      </div>
+      {!large && <div className="hidden pl-4 font-cond text-[12px] leading-4 text-muted @[200px]:block">{camera.id}</div>}
+    </div>
   )
 }
 
-export default function CameraTile({ camera }: { camera: Camera }) {
-  const scene = cameraScenes[camera.id]
+interface CameraTileProps {
+  camera: Camera
+  onFocus: () => void
+}
 
+export default function CameraTile({ camera, onFocus }: CameraTileProps) {
   return (
-    <article className="@container relative aspect-video overflow-hidden rounded-[10px] border border-line-strong bg-video">
-      {scene && <Scene scene={scene} className="absolute inset-0 h-full w-full" />}
+    <article className="@container relative aspect-video overflow-hidden rounded-xl bg-video">
+      <CameraStream camera={camera} compact />
 
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-[rgba(5,9,15,0.9)] to-transparent px-2.5 pt-2 pb-5 @[220px]:px-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <StatusDot color="var(--color-healthy)" size={7} />
-            <h3 className="truncate text-[14px] leading-[18px] font-semibold">{camera.name}</h3>
-          </div>
-          <div className="hidden pl-[13px] font-cond text-[12px] leading-4 text-muted @[200px]:block">{camera.id}</div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {camera.to_review > 0 && (
-            <span className="inline-flex h-5 items-center rounded-full bg-ink px-1.5 font-cond text-[12px] font-bold text-[#0C141F]">
-              {camera.to_review}
-              <span className="hidden @[230px]:inline">&nbsp;to review</span>
-            </span>
-          )}
-          <PeopleCount count={camera.people_count} />
-        </div>
+      <button
+        type="button"
+        onClick={onFocus}
+        aria-label={`Show ${camera.name} large`}
+        className="absolute inset-0 z-10 rounded-xl ring-unsup transition-shadow hover:ring-2 hover:ring-line-strong focus-visible:ring-2 focus-visible:outline-none"
+      />
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 bg-gradient-to-b from-[rgba(5,9,15,0.88)] to-transparent px-3 pt-2 pb-6">
+        <CameraTitle camera={camera} />
+        {camera.to_review > 0 && (
+          <Pill>
+            {camera.to_review}
+            <span className="hidden @[230px]:inline">&nbsp;to review</span>
+          </Pill>
+        )}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end gap-1 bg-gradient-to-t from-[rgba(5,9,15,0.85)] to-transparent px-2 pt-5 pb-2">
-        <ModelChip chip={supervisedChip(camera)} color="var(--color-sup)" />
-        <ModelChip chip={unsupervisedChip(camera)} color="var(--color-unsup)" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-end gap-1 bg-gradient-to-t from-[rgba(5,9,15,0.85)] to-transparent px-2 pt-6 pb-2">
+        <ModelChips camera={camera} compact />
       </div>
     </article>
   )

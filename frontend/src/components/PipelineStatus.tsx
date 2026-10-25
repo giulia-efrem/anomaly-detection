@@ -1,43 +1,49 @@
+import { ChevronRight, Plus } from 'lucide-react'
 import { Fragment } from 'react'
-import { ChevronRightIcon, PlusIcon } from './Icons'
-import StatusDot from './StatusDot'
+import { usePipelineStatus } from '../api/hooks'
+import { Button } from '../ui/Button'
+import { Skeleton } from '../ui/States'
+import StatusDot from '../ui/StatusDot'
 
-const STAGES = [
-  { label: 'Streams', detail: '7/7' },
-  { label: 'Person and pose', detail: '7/7' },
-  { label: 'Anomaly scoring', detail: 'live' },
-  { label: 'Scene captions', detail: '13 s ago' },
-]
+export default function PipelineStatus({ onAddCamera }: { onAddCamera: () => void }) {
+  const { data, isLoading, isError } = usePipelineStatus()
+  const slots = data?.camera_slots
+  const full = slots ? slots.used >= slots.total : false
 
-export default function PipelineStatus() {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-[14px]">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4">
       <span className="text-[13px] text-muted">Pipeline</span>
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-        {STAGES.map((s, i) => (
-          <Fragment key={s.label}>
-            {i > 0 && (
-              <li aria-hidden="true" className="hidden text-[#3E5470] sm:block">
-                <ChevronRightIcon size={14} />
+      {isLoading ? (
+        <Skeleton className="h-8 w-[min(560px,100%)] rounded-full" />
+      ) : isError || !data ? (
+        <span className="text-[13px] text-muted">Status unavailable</span>
+      ) : (
+        <ol className="flex flex-wrap items-center gap-x-1 gap-y-2">
+          {data.stages.map((s, i) => (
+            <Fragment key={s.key}>
+              {i > 0 && (
+                <li aria-hidden="true" className="hidden text-[#3E5470] sm:block">
+                  <ChevronRight size={14} />
+                </li>
+              )}
+              <li className="inline-flex h-8 items-center gap-2 rounded-full bg-[#121E2D] px-3 text-[13px] whitespace-nowrap">
+                <StatusDot color={s.active ? 'var(--color-healthy)' : 'var(--color-muted)'} active={s.active} size={7} />
+                <span className="text-ink-2">{s.label}</span>
+                <span className="font-cond text-muted">{s.detail}</span>
               </li>
-            )}
-            <li className="inline-flex h-[30px] items-center gap-2 rounded-full border border-line-strong bg-[#121E2D] px-3 text-[13px] whitespace-nowrap">
-              <StatusDot color="var(--color-healthy)" size={7} />
-              <span className="text-ink-2">{s.label}</span>
-              <span className="-ml-0.5 font-cond text-muted">{s.detail}</span>
-            </li>
-          </Fragment>
-        ))}
-      </ol>
+            </Fragment>
+          ))}
+        </ol>
+      )}
       <div className="ml-auto flex items-center gap-3">
-        <span className="text-[13px] text-muted">7 of 10 camera slots</span>
-        <button
-          type="button"
-          className="inline-flex h-[34px] items-center gap-1.5 rounded-lg border border-[#2C3F59] px-3 text-[13px] font-medium text-ink transition-colors hover:bg-[#16233A]"
-        >
-          <PlusIcon size={15} />
+        {slots && (
+          <span className="text-[13px] text-muted">
+            {slots.used} of {slots.total} camera slots
+          </span>
+        )}
+        <Button size="sm" icon={Plus} onClick={onAddCamera} disabled={full}>
           Add camera
-        </button>
+        </Button>
       </div>
     </div>
   )

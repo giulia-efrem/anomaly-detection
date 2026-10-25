@@ -1,8 +1,0 @@
-{
-  "camera_id": "cam5",
-  "incident_id": "inc-0141",
-  "type": "fight",
-  "scores": { "supervised": 0.95, "unsupervised": 0.88 },
-  "thresholds": { "supervised": 0.5, "unsupervised": 0.6 },
-  "above_threshold_s": 3.2
-}

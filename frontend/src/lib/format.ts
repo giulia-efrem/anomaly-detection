@@ -22,6 +22,12 @@ export function clockTime(iso: string): string {
   return iso.slice(11, 19)
 }
 
+/** "2026-10-25T11:39:00" -> "Sun 25 Oct, 11:39" */
+export function dayAndTime(iso: string): string {
+  const d = new Date(iso)
+  return `${formatDay(d)}, ${iso.slice(11, 16)}`
+}
+
 export function score(value: number): string {
   return value.toFixed(2)
 }
@@ -36,6 +42,19 @@ export function formatClock(d: Date): string {
 
 export function formatDay(d: Date): string {
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`
+}
+
+export function formatBytes(bytes: number | null | undefined): string {
+  if (!bytes) return '0 MB'
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`
+  if (bytes >= 1e6) return `${Math.round(bytes / 1e6)} MB`
+  return `${Math.max(1, Math.round(bytes / 1e3))} kB`
+}
+
+export function formatDuration(seconds: number | null | undefined): string {
+  if (!seconds) return '0:00'
+  const s = Math.round(seconds)
+  return `${Math.floor(s / 60)}:${pad(s % 60)}`
 }
 
 export interface ChipState {
@@ -61,3 +80,5 @@ export function unsupervisedChip(camera: Camera): ChipState {
       return { label: 'Unsupervised off', active: false }
   }
 }
+
+export const SOURCE_LABELS = { file: 'Video file', rtsp: 'Stream URL', webcam: 'Webcam' } as const
