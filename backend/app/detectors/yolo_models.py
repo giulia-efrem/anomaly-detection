@@ -1,4 +1,4 @@
-"""Detectors built on YOLOv8 object detectors (Ultralytics).
+"""Detector built on a YOLOv8 object detector (Ultralytics).
 
 fire_explosion: YOLOv8n trained on D-Fire (rabahdev), classes smoke and fire.
     Score = the most confident fire box (smoke counts at 0.85 of its confidence). Flames
@@ -8,12 +8,6 @@ fire_explosion: YOLOv8n trained on D-Fire (rabahdev), classes smoke and fire.
     pixels; a red bag had 19 %.
     An explosion is a sudden large fire or smoke region together with a sudden
     jump in brightness or motion; it lifts the score.
-shooting: YOLOv8n threat detector (Subh775), classes Gun, explosion, grenade, knife.
-    A gun only counts when it is held by a person and is not the person's own box (the
-    model sometimes boxes a whole person as "Gun"), and only after it was seen in several
-    of the last frames; sudden movement of the people around it raises the score. The model's
-    "explosion" class is not used: on test footage it fired on quiet streets and
-    missed real fireballs.
 """
 
 from __future__ import annotations
@@ -24,7 +18,7 @@ import cv2
 import numpy as np
 
 from .. import model_files
-from .base import Box, Detector, TrackedObject, Window
+from .base import Box, Detector, Window
 
 IMGSZ = 640
 
@@ -155,87 +149,3 @@ class FireDetector(Detector):
             score = 0.0
             self.last_note.pop(w.camera_id, None)
         return {"fire_explosion": float(score)}
-
-
-def _iou(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
-    ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
-    iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
-    inter = ix * iy
-    return inter / (_area(a) + _area(b) - inter + 1e-9)
-
-
-def _held(obj_box: tuple[float, float, float, float], person: TrackedObject, margin: float = 0.3) -> bool:
-    """A hand-held object: its centre lies in the person's box grown by `margin`, and it is not
-    the person itself (the model sometimes boxes a whole person as "Gun")."""
-    x1, y1, x2, y2 = person.box
-    w, h = x2 - x1, y2 - y1
-    cx, cy = (obj_box[0] + obj_box[2]) / 2, (obj_box[1] + obj_box[3]) / 2
-    inside = x1 - margin * w <= cx <= x2 + margin * w and y1 - margin * h <= cy <= y2 + margin * h
-    is_person = _iou(obj_box, person.box) >= 0.5 or (obj_box[3] - obj_box[1]) >= 0.9 * h
-    return inside and not is_person
-
-
-def _counts(box: tuple[float, float, float, float], people: list[TrackedObject]) -> bool:
-    """Held by a person, or a close-up (at least 5 % of the image) where only a hand is in view."""
-    if any(_held(box, p) for p in people):
-        return True
-    return _area(box) >= 0.05 and not any(_iou(box, p.box) >= 0.5 for p in people)
-
-
-class ThreatDetector(Detector):
-    id = "threat-yolov8n"
-    name = "YOLOv8n threat detector"
-    classes = ("shooting",)
-    every_s = 0.6  # about 1.7 times a second while people are present
-    window_size = 1
-    CONF = 0.35
-    HISTORY = 5  # runs, about 3 s
-    MIN_HITS = 3  # "several frames" before a gun counts fully
-    COLORS = {"Gun": (60, 60, 255), "knife": (60, 160, 255), "grenade": (60, 60, 255), "explosion": (40, 90, 255)}
-
-    def warmup(self) -> None:
-        self.model = _load_yolo(self.id, self.device)
-        self.loaded = True
-
-    def wants(self, window: Window) -> bool:
-        return bool(window.people)
-
-    def score_batch(self, windows: list[Window]) -> list[dict[str, float]]:
-        if not windows:
-            return []
-        results = self.model.predict([w.image for w in windows], imgsz=IMGSZ, conf=self.CONF, device=self.device,
-                                     quantize=16 if self.device == "cuda" else None, verbose=False)
-        return [self._score_one(w, r) for w, r in zip(windows, results)]
-
-    def score(self, window: Window) -> dict[str, float]:
-        return self.score_batch([window])[0]
-
-    def _score_one(self, w: Window, result) -> dict[str, float]:
-        dets = _boxes(result)
-        people = w.people
-        dets = [d for d in dets if d[0] != "explosion" and _counts(d[2], people)]
-        self.last_boxes[w.camera_id] = [Box(n.lower(), c, b, self.COLORS.get(n, (60, 60, 255))) for n, c, b in dets]
-        best = max((c for n, c, _ in dets if n == "Gun"), default=0.0)
-
-        hits: deque = w.state.setdefault("gun_hits", deque(maxlen=self.HISTORY))
-        hits.append(best)
-        seen = [h for h in hits if h > 0]
-        persistence = min(1.0, len(seen) / self.MIN_HITS)
-        gun_score = (float(np.mean(seen)) if seen else 0.0) * persistence
-
-        # Sudden movement of the people around the gun: mean speed now vs. the last 2 s.
-        speeds: deque = w.state.setdefault("people_speed", deque(maxlen=self.HISTORY))
-        now_speed = float(np.mean([p.speed for p in people])) if people else 0.0
-        baseline = float(np.median(speeds)) if speeds else now_speed
-        speeds.append(now_speed)
-        motion_boost = float(np.clip((now_speed - baseline) / (baseline + 0.3), 0.0, 1.0)) if seen else 0.0
-        shooting = min(1.0, gun_score + 0.2 * motion_boost)
-
-        if seen:
-            self.last_note[w.camera_id] = (
-                f"Gun next to a person in {len(seen)} of the last {len(hits)} frames"
-                + (", people around it moved suddenly" if motion_boost > 0.3 else "")
-            )
-        else:
-            self.last_note.pop(w.camera_id, None)
-        return {"shooting": shooting}

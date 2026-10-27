@@ -6,19 +6,19 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 
-DATA_DIR = Path(os.environ.get("VEGHE_DATA_DIR", PROJECT_DIR / "data")).resolve()
-DB_PATH = DATA_DIR / "veghe.db"
+DATA_DIR = Path(os.environ.get("VAD_DATA_DIR", PROJECT_DIR / "data")).resolve()
+DB_PATH = DATA_DIR / "vad.db"
 DOWNLOADS_DIR = DATA_DIR / "downloads"  # raw archives and files as downloaded
 LIBRARY_DIR = DATA_DIR / "library"  # converted H.264 clips and thumbnails
 UPLOADS_DIR = DATA_DIR / "uploads"  # user uploads before conversion
-MODELS_DIR = Path(os.environ.get("VEGHE_MODELS_DIR", DATA_DIR / "models")).resolve()  # scripts/download_models.py
+MODELS_DIR = Path(os.environ.get("VAD_MODELS_DIR", DATA_DIR / "models")).resolve()  # scripts/download_models.py
 NORMALITY_DIR = DATA_DIR / "normality"  # learned scene model per camera
 INCIDENTS_DIR = DATA_DIR / "incidents"  # alert clips and thumbnails
 FEEDBACK_DIR = DATA_DIR / "feedback"  # footage marked "This is normal", kept for retraining
 
 CATALOG_PATH = BACKEND_DIR / "catalog.json"
 # Wikimedia and others ask for a contact address in the User-Agent.
-USER_AGENT = "Veghe/0.3 (https://github.com/giulia-efrem/anomaly-detection)"
+USER_AGENT = "vad-dashboard/0.4 (https://github.com/giulia-efrem/anomaly-detection)"
 MODELS_MANIFEST = BACKEND_DIR / "models" / "models.json"
 
 # Ultralytics writes settings and fonts to its config dir; keep them inside the project.
@@ -46,7 +46,6 @@ DEFAULT_THRESHOLDS = {
     "fight": 0.6,
     "car_accident": 0.85,
     "fire_explosion": 0.6,
-    "shooting": 0.5,  # the threat model's gun confidences sit around 0.4 to 0.55
     "unsupervised": 0.6,
 }
 

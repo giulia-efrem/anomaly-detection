@@ -87,7 +87,8 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 """
 
-SUPERVISED_TYPES = ("fight", "car_accident", "fire_explosion", "shooting")
+SUPERVISED_TYPES = ("fight", "car_accident", "fire_explosion")
+REMOVED_TYPES = ("shooting",)  # dropped with the threat detector
 UNSUPERVISED_TYPES = ("unusual_object", "unusual_motion", "unusual_posture", "loitering", "crowding")
 INCIDENT_TYPE_LIST = SUPERVISED_TYPES + UNSUPERVISED_TYPES + ("other",)
 SCHEMA = SCHEMA.replace("INCIDENT_TYPES", ", ".join(f"'{t}'" for t in INCIDENT_TYPE_LIST))
@@ -127,8 +128,19 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute(f"ALTER TABLE cameras ADD COLUMN learn_seconds REAL NOT NULL DEFAULT {config.LEARN_SECONDS:g}")
     if "thresholds" not in cols:
         conn.execute("ALTER TABLE cameras ADD COLUMN thresholds TEXT NOT NULL DEFAULT '{}'")
+    for t in REMOVED_TYPES:
+        for row in conn.execute("SELECT id FROM incidents WHERE type = ?", (t,)).fetchall():
+            for ext in ("mp4", "jpg"):
+                (config.INCIDENTS_DIR / f"{row['id']}.{ext}").unlink(missing_ok=True)
+        conn.execute("DELETE FROM feedback WHERE incident_type = ?", (t,))
+        conn.execute("DELETE FROM incidents WHERE type = ?", (t,))
+    for row in conn.execute("SELECT id, thresholds FROM cameras").fetchall():
+        thr = json.loads(row["thresholds"] or "{}")
+        if any(t in thr for t in REMOVED_TYPES):
+            conn.execute("UPDATE cameras SET thresholds = ? WHERE id = ?",
+                         (json.dumps({k: v for k, v in thr.items() if k not in REMOVED_TYPES}), row["id"]))
     sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = 'incidents'").fetchone()["sql"]
-    if "car_accident" not in sql:
+    if "car_accident" not in sql or any(f"'{t}'" in sql for t in REMOVED_TYPES):
         # SQLite cannot change a CHECK constraint: rebuild the table with the new incident types.
         old_cols = {r["name"] for r in conn.execute("PRAGMA table_info(incidents)")}
         conn.execute("ALTER TABLE incidents RENAME TO incidents_old")
@@ -266,6 +278,7 @@ def incident_from_row(row: sqlite3.Row) -> dict[str, Any]:
         "reason": row["reason"],
         "details": json.loads(row["details"] or "{}"),
         "status": row["status"],
+        "severity": "critical" if row["type"] in SUPERVISED_TYPES else "warning",
     }
 
 

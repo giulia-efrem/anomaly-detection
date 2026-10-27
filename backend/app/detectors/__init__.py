@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from .base import Box, Detector, TrackedObject, Window
 from .clip_models import CrashDetector, FightDetector
-from .yolo_models import FireDetector, ThreatDetector
+from .yolo_models import FireDetector
 
-PLUGINS: list[type[Detector]] = [FightDetector, CrashDetector, FireDetector, ThreatDetector]
+PLUGINS: list[type[Detector]] = [FightDetector, CrashDetector, FireDetector]
 
-SUPERVISED_CLASSES = ("fight", "car_accident", "fire_explosion", "shooting")
+SUPERVISED_CLASSES = ("fight", "car_accident", "fire_explosion")
 
 __all__ = ["PLUGINS", "SUPERVISED_CLASSES", "Box", "Detector", "TrackedObject", "Window"]

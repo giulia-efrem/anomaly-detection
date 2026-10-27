@@ -31,10 +31,13 @@ from .events import bus
 if TYPE_CHECKING:
     from .pipeline import CameraState, Pipeline
 
-log = logging.getLogger("veghe.alerts")
+log = logging.getLogger("vad.alerts")
 
 UNSUP = "unsupervised"
 KEYS = SUPERVISED_CLASSES + (UNSUP,)
+SERIES_PRE_S = 10.0  # seconds of scores kept from before the alert
+SERIES_STEP_S = 0.5
+SERIES_MAX = 240
 
 
 def iso(ts: float) -> str:
@@ -149,6 +152,12 @@ class AlertEngine:
                         "alert_at": iso(ts), "keys": [key]},
             "status": "needs_review",
         }
+        incident["details"]["series"] = {
+            "class": sup_cls, "t0": round(ts, 3),
+            "points": [[round(t - ts, 2), round(s[sup_cls], 3), round(u, 3)]
+                       for t, s, u in st.score_log if t >= ts - SERIES_PRE_S],
+        }
+        incident["details"]["detections"] = self._detections(st)
         if key != UNSUP and finding and st.unsup_score >= thr[UNSUP]:
             incident["raised_by"] = "both"
             incident["caption"] = f"{caption}. Scene: {finding.text}"
@@ -167,6 +176,11 @@ class AlertEngine:
         inc = o.incident
         o.last_above = ts
         inc["ended_at"] = iso(ts)
+        series = inc["details"].get("series")
+        if series and len(series["points"]) < SERIES_MAX and \
+                ts - series["t0"] - (series["points"][-1][0] if series["points"] else -1) >= SERIES_STEP_S:
+            series["points"].append([round(ts - series["t0"], 2), round(sup[series["class"]], 3),
+                                     round(st.unsup_score, 3)])
         if int(ts) != ep.counted_second:
             ep.counted_second = int(ts)
             inc["alarm_count"] += 1
@@ -208,6 +222,16 @@ class AlertEngine:
                 ep.incident_id = None
         db.save_incident(o.incident)
         bus.publish({"type": "incident.updated", "incident": db.get_incident(inc_id)})
+
+    @staticmethod
+    def _detections(st: CameraState) -> list[dict[str, Any]]:
+        """What was in view at the alert: tracked objects and the supervised models' boxes."""
+        from .detectors.base import SCENERY
+
+        out = [{"label": o.cls, "track_id": o.track_id, "conf": round(o.conf, 2), "source": "tracker"}
+               for o in st.objects if o.cls not in SCENERY]
+        out += [{"label": b.label, "track_id": None, "conf": round(b.conf, 2), "source": "model"} for b in st.boxes]
+        return out[:40]
 
     # --- media ---------------------------------------------------------------
 

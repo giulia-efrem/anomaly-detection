@@ -5,10 +5,11 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 IncidentType = Literal[
-    "fight", "car_accident", "fire_explosion", "shooting",
+    "fight", "car_accident", "fire_explosion",
     "unusual_object", "unusual_motion", "unusual_posture", "loitering", "crowding", "other",
 ]
-ThresholdKey = Literal["fight", "car_accident", "fire_explosion", "shooting", "unsupervised"]
+ThresholdKey = Literal["fight", "car_accident", "fire_explosion", "unsupervised"]
+Severity = Literal["critical", "warning"]
 RaisedBy = Literal["supervised", "unsupervised", "both"]
 IncidentStatus = Literal["needs_review", "confirmed", "false_alarm"]
 SourceType = Literal["rtsp", "webcam", "file"]
@@ -39,6 +40,7 @@ class Incident(BaseModel):
     clip_url: str | None
     status: IncidentStatus
     # Beyond the contract
+    severity: Severity  # critical for supervised classes, warning for unsupervised alerts
     thumbnail_url: str | None
     reason: str | None  # scene normality reason when that model contributed
     details: dict

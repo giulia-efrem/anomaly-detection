@@ -20,7 +20,7 @@ from ..runtime import cameras as manager
 from ..runtime import pipeline
 from ..schemas import Camera, CameraCreate, CameraUpdate, LearnRequest
 
-log = logging.getLogger("veghe.routes.cameras")
+log = logging.getLogger("vad.routes.cameras")
 
 router = APIRouter(prefix="/api/cameras", tags=["cameras"])
 

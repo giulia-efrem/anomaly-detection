@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import WebSocket
 
-log = logging.getLogger("veghe.events")
+log = logging.getLogger("vad.events")
 
 
 class EventBus:

@@ -1,5 +1,5 @@
 @echo off
-rem Starts the Veghe backend and frontend in two windows, then opens the dashboard.
+rem Starts the backend and the frontend in two windows, then opens the dashboard.
 setlocal
 cd /d "%~dp0"
 
@@ -24,8 +24,8 @@ if not exist "frontend\node_modules" (
   popd
 )
 
-start "Veghe backend (port 8000)" /D "%~dp0backend" cmd /k ".venv\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
-start "Veghe frontend (port 5180)" /D "%~dp0frontend" cmd /k "npm run dev"
+start "Backend (port 8000)" /D "%~dp0backend" cmd /k ".venv\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+start "Frontend (port 5180)" /D "%~dp0frontend" cmd /k "npm run dev"
 
 echo Waiting for the backend and the frontend to answer...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^

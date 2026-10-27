@@ -29,7 +29,7 @@ async def lifespan(_: FastAPI):
     await bus.stop()
 
 
-app = FastAPI(title="Veghe", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="Video anomaly detection dashboard", version="0.4.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.CORS_ORIGINS,

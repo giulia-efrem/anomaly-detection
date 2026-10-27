@@ -22,7 +22,7 @@ import numpy as np
 
 from . import config
 
-log = logging.getLogger("veghe.cameras")
+log = logging.getLogger("vad.cameras")
 
 StatusCallback = Callable[[str, str], None]
 

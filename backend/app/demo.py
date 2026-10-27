@@ -1,4 +1,4 @@
-r"""Build the demo setup: download the test datasets, join clips into reels, create 8 virtual cameras.
+r"""Build the demo setup: download the test datasets, join clips into reels, create 7 virtual cameras.
 
 Run with the backend stopped:  .venv\python.exe -m app.demo
 Existing cameras (and what they learned) are replaced. Library clips, incidents and downloads are kept.
@@ -16,9 +16,9 @@ import logging
 from . import config, db, library, media
 from .normality import NormalityModel
 
-log = logging.getLogger("veghe.demo")
+log = logging.getLogger("vad.demo")
 
-DATASETS = ["fight-surv", "veghe-demo", "ur-fall", "avenue", "ucsd"]
+DATASETS = ["fight-surv", "demo-clips", "ur-fall", "avenue", "ucsd"]
 
 
 def _r(prefix: str, first: int, last: int, width: int = 3) -> list[str]:
@@ -37,19 +37,14 @@ REELS = [
         "clips": _r("nofight", 51, 52) + _r("fight", 115, 121),
     },
     {
-        "camera_id": "roads", "name": "Road cameras", "dataset": "veghe-demo", "key": "reel-crashes",
+        "camera_id": "roads", "name": "Road cameras", "dataset": "demo-clips", "key": "reel-crashes",
         "title": "Road cameras: three collisions",
         "clips": ["crash-jilin", "crash-staten-island", "crash-dashcam"],
     },
     {
-        "camera_id": "fire-watch", "name": "Fire watch", "dataset": "veghe-demo", "key": "reel-fire",
+        "camera_id": "fire-watch", "name": "Fire watch", "dataset": "demo-clips", "key": "reel-fire",
         "title": "Fire watch: bus fire, gas blast, balloon fireball, car fire",
         "clips": ["fire-bus", "explosion-gas-cylinder", "explosion-balloon", "fire-car-riot"],
-    },
-    {
-        "camera_id": "armed", "name": "Shooting ranges and office", "dataset": "veghe-demo", "key": "reel-guns",
-        "title": "Handguns: two shooting ranges, then an office robbery",
-        "clips": ["gun-range-handheld", "gun-pistol-range", "gun-office-robbery"],
     },
     {
         "camera_id": "office", "name": "Office", "dataset": "ur-fall", "key": "reel-office",

@@ -19,12 +19,12 @@ import httpx
 import numpy as np
 import pytest
 
-DATA = Path(tempfile.mkdtemp(prefix="veghe-test-"))
-os.environ["VEGHE_DATA_DIR"] = str(DATA)
+DATA = Path(tempfile.mkdtemp(prefix="vad-test-"))
+os.environ["VAD_DATA_DIR"] = str(DATA)
 # Use the downloaded models when they exist, so the live pipeline runs during the tests too.
 REAL_MODELS = Path(__file__).resolve().parents[2] / "data" / "models"
 if REAL_MODELS.is_dir():
-    os.environ["VEGHE_MODELS_DIR"] = str(REAL_MODELS)
+    os.environ["VAD_MODELS_DIR"] = str(REAL_MODELS)
 
 import uvicorn  # noqa: E402
 
@@ -104,7 +104,7 @@ def incidents(base: str) -> list[str]:
     rows = [
         _incident("inc-t1", type_="fight", ended="2026-10-27T10:00:00"),
         _incident("inc-t2", type_="unusual_object", raised_by="unsupervised", ended="2026-10-27T10:05:00"),
-        _incident("inc-t3", type_="shooting", raised_by="both", ended="2026-10-27T10:10:00"),
+        _incident("inc-t3", type_="car_accident", raised_by="both", ended="2026-10-27T10:10:00"),
     ]
     for r in rows:
         db.save_incident(r)
@@ -133,11 +133,18 @@ def test_health_and_status(client: httpx.Client) -> None:
 def test_models_listed_with_licenses(client: httpx.Client) -> None:
     data = client.get("/api/models").json()
     ids = {m["id"] for m in data["models"]}
-    assert {"yolo11s", "yolo11n-pose", "fight-x3d", "crash-r3d18", "fire-yolov8n", "threat-yolov8n"} == ids
+    assert {"yolo11s", "yolo11n-pose", "fight-x3d", "crash-r3d18", "fire-yolov8n"} == ids
     for m in data["models"]:
         assert m["license"] and m["source_url"].startswith("https://")
     pretrained = {c for m in data["models"] if m["family"] == "pretrained" for c in m["classes"]}
-    assert pretrained == {"fight", "car_accident", "fire_explosion", "shooting"}
+    assert pretrained == {"fight", "car_accident", "fire_explosion"}
+
+
+def test_system_status(client: httpx.Client) -> None:
+    s = client.get("/api/system").json()
+    assert set(s) == {"cameras", "gpu", "models", "analysis_fps", "issues"}
+    assert s["models"]["total"] == 5 and isinstance(s["issues"], list)
+    assert s["cameras"]["online"] <= s["cameras"]["total"]
 
 
 # --- incidents ----------------------------------------------------------------
@@ -148,11 +155,13 @@ def test_incidents_list_patch_and_feedback(client: httpx.Client, incidents: list
     assert [i["id"] for i in listed][:3] == ["inc-t3", "inc-t2", "inc-t1"]  # newest first
     assert set(listed[0]) == {
         "id", "camera_id", "type", "started_at", "ended_at", "alarm_count", "raised_by", "scores", "thresholds",
-        "caption", "clip_url", "status", "thumbnail_url", "reason", "details",
+        "caption", "clip_url", "status", "thumbnail_url", "reason", "details", "severity",
     }
-    assert [i["id"] for i in client.get("/api/incidents", params={"type": "shooting"}).json()] == ["inc-t3"]
+    assert {i["id"]: i["severity"] for i in listed[:3]} == {"inc-t3": "critical", "inc-t2": "warning", "inc-t1": "critical"}
+    assert [i["id"] for i in client.get("/api/incidents", params={"type": "car_accident"}).json()] == ["inc-t3"]
     assert [i["id"] for i in client.get("/api/incidents", params={"raised_by": "unsupervised"}).json()] == ["inc-t2"]
     assert client.get("/api/incidents", params={"type": "fall"}).status_code == 422  # removed class
+    assert client.get("/api/incidents", params={"type": "shooting"}).status_code == 422  # removed class
 
     r = client.patch("/api/incidents/inc-t1", json={"status": "confirmed"})
     assert r.status_code == 200 and r.json()["status"] == "confirmed"
@@ -216,7 +225,8 @@ def test_camera_crud_stream_and_snapshot(client: httpx.Client, base: str, sample
     r = client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fight": 0.7}, "supervised": "off"})
     assert r.status_code == 200
     assert r.json()["thresholds"]["fight"] == 0.7
-    assert r.json()["thresholds"]["shooting"] == config.DEFAULT_THRESHOLDS["shooting"]
+    assert "shooting" not in r.json()["thresholds"]
+    assert client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"shooting": 0.5}}).status_code == 422
     assert r.json()["supervised"] == "off"
     assert client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fight": 1.5}}).status_code == 422
     assert client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fall": 0.5}}).status_code == 422
@@ -282,9 +292,10 @@ def test_camera_slot_limit(client: httpx.Client, sample_video: Path) -> None:
 def test_catalog_and_jobs(client: httpx.Client) -> None:
     cat = client.get("/api/library/catalog").json()
     ids = {d["id"] for d in cat["datasets"]}
-    assert {"ur-fall", "fight-surv", "avenue", "ucsd", "veghe-demo"} <= ids
+    assert {"ur-fall", "fight-surv", "avenue", "ucsd", "demo-clips"} <= ids
+    assert "shooting" not in cat["anomaly_types"]
     assert "fall" not in cat["anomaly_types"]
-    demo = next(d for d in cat["datasets"] if d["id"] == "veghe-demo")
+    demo = next(d for d in cat["datasets"] if d["id"] == "demo-clips")
     assert len(demo["credits"]) == demo["clip_count"] and all(c["author"] and c["license"] for c in demo["credits"])
     for d in cat["datasets"]:
         assert d["size_bytes"] < 2_000_000_000 and d["license"] and d["source_url"].startswith("http")

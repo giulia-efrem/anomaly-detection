@@ -2,8 +2,10 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from .. import config, db
+from .. import config, db, model_files
 from ..events import bus
+from ..pipeline import models as loaded_models
+from .models import gpu_memory
 from ..runtime import cameras as manager
 from ..runtime import pipeline
 
@@ -42,6 +44,30 @@ def pipeline_status() -> dict[str, Any]:
              "detail": f"{ready} ready, {learning} learning" if cams else "no cameras"},
         ],
         "pipeline": summary,
+    }
+
+
+@router.get("/api/system")
+def system() -> dict[str, Any]:
+    """Status bar and health: cameras online, GPU load and memory, models loaded, open issues."""
+    cams = db.list_cameras()
+    offline = [c["name"] for c in cams if manager.status(c["id"]) == "offline"]
+    online = sum(1 for c in cams if manager.status(c["id"]) == "live")
+    entries = model_files.entries()
+    loaded = sum(1 for m in entries if loaded_models.status.get(m["id"], {}).get("loaded"))
+    failed = [m["name"] for m in entries if loaded_models.status.get(m["id"], {}).get("error")]
+    summary = pipeline.summary()
+    issues = [f"Camera offline: {n}" for n in offline]
+    issues += [f"Model not loaded: {n}" for n in failed]
+    if summary["error"]:
+        issues.append(f"Analysis stopped: {summary['error']}")
+    fps = [f for cid, f in summary["fps"].items() if manager.status(cid) == "live"]
+    return {
+        "cameras": {"online": online, "total": len(cams)},
+        "gpu": gpu_memory(),
+        "models": {"loaded": loaded, "total": len(entries), "ready": summary["ready"]},
+        "analysis_fps": round(sum(fps) / len(fps), 1) if fps else None,
+        "issues": issues,
     }
 
 

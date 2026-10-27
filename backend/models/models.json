@@ -81,22 +81,6 @@
       "license": "AGPL-3.0",
       "license_url": "https://huggingface.co/rabahdev/fire-smoke-yolov8n",
       "source_url": "https://huggingface.co/rabahdev/fire-smoke-yolov8n"
-    },
-    {
-      "id": "threat-yolov8n",
-      "name": "YOLOv8n threat detector (gun, explosive, grenade, knife)",
-      "role": "Shooting",
-      "family": "pretrained",
-      "classes": [
-        "shooting"
-      ],
-      "file": "threat_yolov8n.pt",
-      "url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n/resolve/c6d6fa4e6c9bfd4c4fccb46478db23609e5468fb/weights/best.pt",
-      "size_bytes": 6251747,
-      "sha256": "86c43444ae8319d2276dd300edc3e7f7a1137fe7566737f994ca579ad770f6ce",
-      "license": "MIT (weights; trained with AGPL-3.0 Ultralytics)",
-      "license_url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n",
-      "source_url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n"
     }
   ]
 }

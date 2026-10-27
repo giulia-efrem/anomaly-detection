@@ -7,7 +7,7 @@ batched across cameras:
 2. YOLO11n pose for cameras with people in view (every third frame)
 3. the supervised plugins, each only when it makes sense:
    fight when two or more people are close, crash when vehicles are present,
-   threat detector when a person is present, fire once per second;
+   fire once per second;
    clip models see a sliding window of the last 16 analysis frames
 4. the camera's scene normality model, which learns or scores
 
@@ -38,7 +38,7 @@ from .detectors import PLUGINS, SUPERVISED_CLASSES, Box, Detector, TrackedObject
 from .events import bus
 from .normality import NormalityModel
 
-log = logging.getLogger("veghe.pipeline")
+log = logging.getLogger("vad.pipeline")
 
 ANALYSIS_FPS = 5.0
 SMALL_WIDTH = 320  # frames kept for the clip models
@@ -93,6 +93,8 @@ class CameraState:
     last_event: float = 0.0
     last_saved: float = field(default_factory=time.monotonic)
     ticks: int = 0
+    # (timestamp, best score per supervised class, unsupervised score), for the incident score chart
+    score_log: deque = field(default_factory=lambda: deque(maxlen=120))
     clip_pending: dict[str, Window] = field(default_factory=dict)  # plugin id -> window waiting for ClipWorker
 
     @property
@@ -387,6 +389,7 @@ class Pipeline(threading.Thread):
 
         for (cam, st, frame), objs in zip(batch, objects_per_image):
             self._normality(cam, st, objs, frame.timestamp, st.det_state["_dt"]["dt"])
+            st.score_log.append((frame.timestamp, self.class_scores(st), st.unsup_score))
             self.alerts.update(cam, st, frame)
             self._publish(cam, st)
         lap("normality_alerts")
@@ -486,6 +489,7 @@ class Pipeline(threading.Thread):
         bus.publish({
             "type": "camera.live",
             "camera_id": st.camera_id,
+            "ts": round(st.image_ts, 3),  # capture time of the analysed frame
             "people_count": st.people_count,
             "scores": {k: round(v, 3) for k, v in self.class_scores(st).items()},
             "unsupervised": {"score": round(st.unsup_score, 3), "reason": f.reason if f else None,

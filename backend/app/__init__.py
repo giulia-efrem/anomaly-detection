@@ -1,1 +1,1 @@
-"""Veghe backend: cameras, MJPEG streaming, incidents and the test video library."""
+"""Video anomaly detection dashboard backend: cameras, analysis, incidents, test video library."""

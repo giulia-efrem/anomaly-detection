@@ -28,7 +28,7 @@ import httpx
 from . import config, db, media
 from .events import bus
 
-log = logging.getLogger("veghe.library")
+log = logging.getLogger("vad.library")
 
 MY_VIDEOS_ID = "my-videos"
 MY_VIDEOS_NAME = "My videos"
