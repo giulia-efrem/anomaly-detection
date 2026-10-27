@@ -44,12 +44,15 @@ def _h264_args() -> list[str]:
             "-movflags", "+faststart", "-an"]
 
 
-def to_h264(src: Path, dst: Path, crop: str | None = None, max_width: int = config.CLIP_MAX_WIDTH) -> None:
-    """Convert any video OpenCV/ffmpeg can read into a browser friendly H.264 MP4."""
+def to_h264(src: Path, dst: Path, crop: str | None = None, max_width: int = config.CLIP_MAX_WIDTH,
+            trim: tuple[float, float] | None = None) -> None:
+    """Convert any video OpenCV/ffmpeg can read into a browser friendly H.264 MP4.
+    `trim` keeps (start, duration) seconds of it."""
     filters = ([crop] if crop else []) + [_scale_filter(max_width)]
     dst.parent.mkdir(parents=True, exist_ok=True)
     tmp = dst.with_suffix(".tmp.mp4")
-    _run(["-i", str(src), "-vf", ",".join(filters), *_h264_args(), str(tmp)])
+    cut = ["-ss", f"{trim[0]:g}", "-t", f"{trim[1]:g}"] if trim else []
+    _run([*cut, "-i", str(src), "-vf", ",".join(filters), *_h264_args(), str(tmp)])
     tmp.replace(dst)
 
 

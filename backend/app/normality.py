@@ -30,7 +30,7 @@ import cv2
 import numpy as np
 
 from . import config
-from .detectors.base import VEHICLES, TrackedObject
+from .detectors.base import SCENERY, VEHICLES, TrackedObject
 
 GRID_W, GRID_H = 16, 9
 SPEED_EDGES = np.array([0.0, 0.15, 0.4, 0.8, 1.5, 3.0, np.inf])  # box heights per second
@@ -91,7 +91,7 @@ DIRECTION_WORDS = ["left", "up and left", "up", "up and right", "right", "down a
 def pose_feature(obj: TrackedObject) -> np.ndarray | None:
     """Keypoints relative to the box centre, scaled by the longer box side, plus visibility and box shape."""
     kp = obj.keypoints
-    if kp is None or obj.height < 0.08:  # small people give unreliable keypoints
+    if kp is None or obj.size < 0.08:  # small people give unreliable keypoints
         return None
     vis = kp[:, 2] >= 0.3
     if vis.sum() < 8:
@@ -211,15 +211,16 @@ class NormalityModel:
         with self.lock:
             if len(self.poses) > POSE_K + 1:
                 idx = self._rng.choice(len(self.poses), size=min(500, len(self.poses)), replace=False)
-                d = self._knn(self.poses[idx], exclude_self=True)
+                d = self._knn(self.poses[idx], exclude=idx)
                 self.pose_scale = float(np.percentile(d, 99))
             self._pose_dirty = False
             self.updated_at = time.strftime("%Y-%m-%dT%H:%M:%S")
 
-    def _knn(self, q: np.ndarray, exclude_self: bool = False) -> np.ndarray:
+    def _knn(self, q: np.ndarray, exclude: np.ndarray | None = None) -> np.ndarray:
+        """Mean distance to the K nearest poses in the bank; `exclude` = bank rows of the queries themselves."""
         d2 = ((q[:, None, :] - self.poses[None, :, :]) ** 2).sum(-1)
-        if exclude_self:
-            d2[d2 < 1e-10] = np.inf
+        if exclude is not None:
+            d2[np.arange(len(q)), exclude] = np.inf
         k = min(POSE_K, self.poses.shape[0] - 1)
         part = np.partition(d2, k - 1, axis=1)[:, :k]
         return np.sqrt(part).mean(axis=1)
@@ -250,6 +251,8 @@ class NormalityModel:
         return findings
 
     def _object(self, o: TrackedObject) -> Finding | None:
+        if o.cls in SCENERY:
+            return None
         name = o.cls.capitalize()
         if self.class_frames.get(o.cls, 0) == 0:
             return Finding("unusual_object", 0.95, f"{name} on a camera where {plural(o.cls)} were never seen", o.track_id)
@@ -260,8 +263,9 @@ class NormalityModel:
         s = 0.9 * _rarity(p, 1.5, rmax)
         if s <= 0:
             return None
-        where = "where" if c < 0.5 else "where only rarely"
-        return Finding("unusual_object", s, f"{name} in a part of the image {where} {plural(o.cls)} were seen", o.track_id)
+        how = "never" if c < 0.5 else "rarely"
+        return Finding("unusual_object", s, f"{name} in a part of the image where {plural(o.cls)} were {how} seen",
+                       o.track_id)
 
     def _motion(self, o: TrackedObject) -> Finding | None:
         sp = self.speed.get(o.cls)
@@ -335,7 +339,7 @@ class NormalityModel:
         if f is None:
             return None
         d = float(self._knn(f[None])[0])
-        s = float(np.clip(0.5 * d / self.pose_scale, 0.0, 1.0))
+        s = float(np.clip(0.5 * d / max(self.pose_scale, 0.05), 0.0, 1.0))
         if s < 0.5:
             return None
         return Finding("unusual_posture", s, f"Person {describe_pose(o)}, unlike the poses learned for this camera", o.track_id)

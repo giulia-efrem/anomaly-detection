@@ -1,7 +1,8 @@
-import { Activity, Footprints, Play, Swords, Undo2, type LucideIcon } from 'lucide-react'
+import { Leaf, Play, Undo2 } from 'lucide-react'
 import { useState } from 'react'
+import { CLASS_MODELS, isSupervisedType, TYPE_ICONS, typeColor } from '../lib/classes'
 import { clockTime, dayAndTime, RAISED_BY_LABELS, typeLabel } from '../lib/format'
-import type { Camera, Incident, IncidentStatus, IncidentType } from '../types'
+import type { Camera, Incident, IncidentStatus } from '../types'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
 import { Card } from '../ui/Panel'
@@ -10,13 +11,6 @@ import ScoreMeter from './ScoreMeter'
 import VideoDialog from './VideoDialog'
 
 export type Decision = Exclude<IncidentStatus, 'needs_review'>
-
-const TYPE_ICONS: Record<IncidentType, LucideIcon> = {
-  fight: Swords,
-  fall: Footprints,
-  unusual_posture: Activity,
-  other: Activity,
-}
 
 const STATUS_TEXT: Record<Decision, string> = {
   confirmed: 'Confirmed',
@@ -27,6 +21,8 @@ interface IncidentCardProps {
   incident: Incident
   camera: Camera | undefined
   onDecide: (incident: Incident, status: IncidentStatus) => void
+  /** "This is normal": a false alarm whose clip teaches the camera's scene model. */
+  onNormal?: (incident: Incident) => void
   /** Show the date as well as the time (incident history). */
   showDate?: boolean
   highlighted?: boolean
@@ -37,11 +33,33 @@ function metaLine(i: Incident): string {
   return i.alarm_count === 1 ? `1 alarm, ${span}` : `${i.alarm_count} alarms merged, ${span}`
 }
 
-export default function IncidentCard({ incident, camera, onDecide, showDate, highlighted }: IncidentCardProps) {
+function Thumbnail({ incident }: { incident: Incident }) {
+  const [failed, setFailed] = useState(false)
+  const Icon = TYPE_ICONS[incident.type] ?? TYPE_ICONS.other
+  if (incident.thumbnail_url && !failed) {
+    return (
+      <img
+        src={incident.thumbnail_url}
+        alt=""
+        onError={() => setFailed(true)}
+        className="h-[63px] w-[112px] shrink-0 rounded-lg bg-video object-cover"
+      />
+    )
+  }
+  return (
+    <div className="flex h-[63px] w-[112px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg bg-video text-muted">
+      <Icon size={20} aria-hidden="true" />
+      <span className="font-cond text-[11px]">No picture</span>
+    </div>
+  )
+}
+
+export default function IncidentCard({ incident, camera, onDecide, onNormal, showDate, highlighted }: IncidentCardProps) {
   const label = typeLabel(incident.type)
-  const Icon = TYPE_ICONS[incident.type]
+  const Icon = TYPE_ICONS[incident.type] ?? TYPE_ICONS.other
   const decided = incident.status !== 'needs_review'
   const [watching, setWatching] = useState(false)
+  const supervised = isSupervisedType(incident.type)
 
   return (
     <Card
@@ -50,13 +68,26 @@ export default function IncidentCard({ incident, camera, onDecide, showDate, hig
       aria-label={`${label} on ${camera?.name ?? incident.camera_id}`}
     >
       <div className="flex gap-3">
-        <div className="flex h-[63px] w-[112px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg bg-video text-muted">
-          <Icon size={20} aria-hidden="true" />
-          <span className="font-cond text-[11px]">No clip yet</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setWatching(true)}
+          disabled={!incident.clip_url}
+          aria-label={incident.clip_url ? `Watch the clip of ${label}` : 'The clip is still being recorded'}
+          className="relative shrink-0 rounded-lg transition-opacity enabled:hover:opacity-85 disabled:cursor-default"
+        >
+          <Thumbnail incident={incident} />
+          {incident.clip_url && (
+            <span className="absolute right-1 bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(8,14,22,0.8)]">
+              <Play size={11} aria-hidden="true" />
+            </span>
+          )}
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="truncate text-[16px] leading-6 font-semibold">{label}</h3>
+            <h3 className="flex min-w-0 items-center gap-2 text-[16px] leading-6 font-semibold">
+              <Icon size={16} aria-hidden="true" className="shrink-0" style={{ color: typeColor(incident.type) }} />
+              <span className="truncate">{label}</span>
+            </h3>
             <time className="shrink-0 font-cond text-[13px] text-muted">
               {showDate ? dayAndTime(incident.ended_at) : clockTime(incident.ended_at)}
             </time>
@@ -65,7 +96,14 @@ export default function IncidentCard({ incident, camera, onDecide, showDate, hig
             <span className="font-semibold text-ink">{camera?.name ?? 'Removed camera'}</span>{' '}
             <span className="font-cond text-muted">{incident.camera_id}</span>
           </div>
-          <Chip className="mt-2">{RAISED_BY_LABELS[incident.raised_by]}</Chip>
+          <div className="mt-2 flex flex-wrap gap-1">
+            <Chip>{RAISED_BY_LABELS[incident.raised_by]}</Chip>
+            {supervised && (
+              <Chip dot="var(--color-sup)" title={CLASS_MODELS[incident.type as keyof typeof CLASS_MODELS]}>
+                Pretrained
+              </Chip>
+            )}
+          </div>
         </div>
       </div>
 
@@ -76,13 +114,13 @@ export default function IncidentCard({ incident, camera, onDecide, showDate, hig
           method="supervised"
           value={incident.scores.supervised}
           threshold={incident.thresholds.supervised}
-          suffix={incident.type === 'fight' || incident.type === 'fall' ? incident.type : undefined}
+          suffix={supervised ? label.toLowerCase() : undefined}
         />
         <ScoreMeter
           method="unsupervised"
           value={incident.scores.unsupervised}
           threshold={incident.thresholds.unsupervised}
-          suffix="anomaly"
+          suffix="unusual"
         />
       </div>
 
@@ -104,6 +142,17 @@ export default function IncidentCard({ incident, camera, onDecide, showDate, hig
             <Button size="sm" variant="secondary" onClick={() => onDecide(incident, 'false_alarm')}>
               False alarm
             </Button>
+            {onNormal && (
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={Leaf}
+                title="False alarm, and the clip is added to what this camera learned as normal"
+                onClick={() => onNormal(incident)}
+              >
+                This is normal
+              </Button>
+            )}
           </>
         )}
         <Button
@@ -112,7 +161,7 @@ export default function IncidentCard({ incident, camera, onDecide, showDate, hig
           icon={Play}
           className="ml-auto"
           disabled={!incident.clip_url}
-          title={incident.clip_url ? undefined : 'Clips are recorded once detection runs (step 3)'}
+          title={incident.clip_url ? undefined : 'The clip is still being recorded'}
           onClick={() => setWatching(true)}
         >
           Watch clip

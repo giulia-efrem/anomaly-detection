@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useCameras, useIncidents } from '../api/hooks'
 import IncidentCard from '../components/IncidentCard'
-import { useIncidentDecision } from '../components/useIncidentDecision'
-import type { IncidentStatus, RaisedBy } from '../types'
+import { useIncidentDecision, useMarkNormalDecision } from '../components/useIncidentDecision'
+import { TYPE_LABELS } from '../lib/classes'
+import { SUPERVISED_TYPES, UNSUPERVISED_TYPES, type IncidentStatus, type IncidentType, type RaisedBy } from '../types'
+import { Select } from '../ui/Field'
 import { PageHeader, Panel } from '../ui/Panel'
 import { EmptyState, ErrorState, Skeleton } from '../ui/States'
 import { Tabs } from '../ui/Tabs'
@@ -17,7 +19,7 @@ const EMPTY_TEXT: Record<StatusTab, string> = {
   needs_review: 'Nothing waiting for review. New incidents land here as soon as a model raises them.',
   confirmed: 'No confirmed incidents yet. Confirm an incident to save it as a labelled training example.',
   false_alarm: 'No false alarms yet. Rejected incidents are kept here as hard negatives for retraining.',
-  all: 'No incidents yet. They appear once detection runs on your cameras (step 3).',
+  all: 'No incidents yet. They appear as soon as a model raises an alarm on one of your cameras.',
 }
 
 export default function IncidentsPage() {
@@ -27,13 +29,15 @@ export default function IncidentsPage() {
   const focus = params.get('focus')
   const [tab, setTab] = useState<StatusTab>('needs_review')
   const [raisedBy, setRaisedBy] = useState<'all' | RaisedBy>('all')
+  const [type, setType] = useState<'all' | IncidentType>('all')
 
   const cameraById = new Map((cameras.data ?? []).map((c) => [c.id, c]))
   const decide = useIncidentDecision(cameraById)
+  const markNormal = useMarkNormalDecision(cameraById)
   const all = incidents.data ?? []
   const byStatus = (s: StatusTab) => (s === 'all' ? all : all.filter((i) => i.status === s))
   const inTab = byStatus(tab)
-  const visible = raisedBy === 'all' ? inTab : inTab.filter((i) => i.raised_by === raisedBy)
+  const visible = inTab.filter((i) => (raisedBy === 'all' || i.raised_by === raisedBy) && (type === 'all' || i.type === type))
 
   useEffect(() => {
     if (focus) document.getElementById(`incident-${focus}`)?.scrollIntoView({ block: 'center' })
@@ -55,17 +59,35 @@ export default function IncidentsPage() {
       <div className="flex flex-col gap-4 px-6 pb-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Tabs items={tabs} value={tab} onChange={setTab} label="Incident status" idBase="incidents" />
-          <ToggleGroup
-            label="Raised by"
-            value={raisedBy}
-            onChange={setRaisedBy}
-            options={[
-              { id: 'all', label: 'Any model' },
-              { id: 'both', label: 'Both' },
-              { id: 'supervised', label: 'Supervised' },
-              { id: 'unsupervised', label: 'Unsupervised' },
-            ]}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="incident-type" className="sr-only">
+              Class
+            </label>
+            <Select id="incident-type" value={type} onChange={(e) => setType(e.target.value as 'all' | IncidentType)} className="h-8 w-[200px] text-[13px]">
+              <option value="all">Any class</option>
+              <optgroup label="Pretrained models">
+                {SUPERVISED_TYPES.map((t) => (
+                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Scene normality">
+                {UNSUPERVISED_TYPES.map((t) => (
+                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </optgroup>
+            </Select>
+            <ToggleGroup
+              label="Raised by"
+              value={raisedBy}
+              onChange={setRaisedBy}
+              options={[
+                { id: 'all', label: 'Any model' },
+                { id: 'both', label: 'Both' },
+                { id: 'supervised', label: 'Pretrained' },
+                { id: 'unsupervised', label: 'Scene' },
+              ]}
+            />
+          </div>
         </div>
 
         <div {...tabPanelProps('incidents', tab)}>
@@ -84,7 +106,7 @@ export default function IncidentsPage() {
               <EmptyState
                 icon={Inbox}
                 title={inTab.length > 0 ? 'No incidents match this filter' : 'Nothing here yet'}
-                description={inTab.length > 0 ? 'Choose "Any model" to see them all.' : EMPTY_TEXT[tab]}
+                description={inTab.length > 0 ? 'Choose "Any class" and "Any model" to see them all.' : EMPTY_TEXT[tab]}
               />
             </Panel>
           ) : (
@@ -95,6 +117,7 @@ export default function IncidentsPage() {
                   incident={i}
                   camera={cameraById.get(i.camera_id)}
                   onDecide={decide}
+                  onNormal={markNormal}
                   showDate
                   highlighted={i.id === focus}
                 />

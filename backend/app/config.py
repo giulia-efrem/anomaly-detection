@@ -17,6 +17,8 @@ INCIDENTS_DIR = DATA_DIR / "incidents"  # alert clips and thumbnails
 FEEDBACK_DIR = DATA_DIR / "feedback"  # footage marked "This is normal", kept for retraining
 
 CATALOG_PATH = BACKEND_DIR / "catalog.json"
+# Wikimedia and others ask for a contact address in the User-Agent.
+USER_AGENT = "Veghe/0.3 (https://github.com/giulia-efrem/anomaly-detection)"
 MODELS_MANIFEST = BACKEND_DIR / "models" / "models.json"
 
 # Ultralytics writes settings and fonts to its config dir; keep them inside the project.

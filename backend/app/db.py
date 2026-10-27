@@ -145,6 +145,13 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("DROP TABLE incidents_old")
     conn.execute("UPDATE cameras SET unsupervised = 'learning', learning_progress = 0 "
                  "WHERE unsupervised = 'collecting'")
+    # Step 3 renamed the library's anomaly types (falls count as unusual posture now).
+    renames = {"fall": "unusual_posture", "running": "unusual_motion", "abnormal_object": "unusual_object"}
+    for row in conn.execute("SELECT id, anomaly_types FROM library_videos").fetchall():
+        types = json.loads(row["anomaly_types"] or "[]")
+        new = list(dict.fromkeys(renames.get(t, t) for t in types))
+        if new != types:
+            conn.execute("UPDATE library_videos SET anomaly_types = ? WHERE id = ?", (json.dumps(new), row["id"]))
     if conn.execute("SELECT 1 FROM meta WHERE key = 'models_enabled'").fetchone() is None:
         # Step 2 cameras were created before any model existed; switch the detectors on once.
         conn.execute("UPDATE cameras SET supervised = 'on'")

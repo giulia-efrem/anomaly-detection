@@ -1,4 +1,4 @@
-import { Compass, GraduationCap, Scale } from 'lucide-react'
+import { Compass, Scale } from 'lucide-react'
 import { Link } from 'react-router'
 import { buttonClass } from '../ui/buttonClass'
 import { PageHeader, Panel } from '../ui/Panel'
@@ -12,27 +12,9 @@ export function ComparePage() {
         <Panel>
           <EmptyState
             icon={Scale}
-            title="Comparison arrives with detection"
-            description="Once both detectors run (step 3), this page shows their scores on the same clips, where they agree and where only one of them raised an alarm."
+            title="Side-by-side comparison comes next"
+            description="This page will show the pretrained and scene normality scores on the same clips, where they agree and where only one of them raised an alarm. Until then, the incident history shows which model raised each alarm."
             action={<Link to="/test-videos" className={buttonClass('secondary', 'sm')}>Prepare test videos</Link>}
-          />
-        </Panel>
-      </div>
-    </>
-  )
-}
-
-export function TrainingPage() {
-  return (
-    <>
-      <PageHeader title="Training" description="Per-camera learning for the unsupervised model and labelled runs for the supervised one." />
-      <div className="px-6 pb-8">
-        <Panel>
-          <EmptyState
-            icon={GraduationCap}
-            title="Nothing to train yet"
-            description="Confirmed incidents and false alarms you review become training data. Training runs will be started and tracked here."
-            action={<Link to="/incidents" className={buttonClass('secondary', 'sm')}>Review incidents</Link>}
           />
         </Panel>
       </div>

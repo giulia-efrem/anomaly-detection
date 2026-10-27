@@ -2,11 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   Camera,
   CameraInput,
+  CameraLive,
+  CameraSettings,
   Catalog,
   Incident,
   IncidentStatus,
   LibraryJob,
   LibraryVideo,
+  ModelsStatus,
+  NormalityJob,
+  NormalitySummary,
   PipelineStatus,
 } from '../types'
 import { api } from './client'
@@ -18,6 +23,11 @@ export const keys = {
   library: ['library'] as const,
   catalog: ['catalog'] as const,
   jobs: ['jobs'] as const,
+  models: ['models'] as const,
+  normality: (cameraId: string) => ['normality', cameraId] as const,
+  /** Filled only by WebSocket events, never fetched. */
+  live: ['live'] as const,
+  normalityJobs: ['normality-jobs'] as const,
 }
 
 // --- queries -----------------------------------------------------------------
@@ -37,7 +47,39 @@ export const useCatalog = () => useQuery({ queryKey: keys.catalog, queryFn: () =
 
 export const useJobs = () => useQuery({ queryKey: keys.jobs, queryFn: () => api.get<LibraryJob[]>('/api/library/jobs') })
 
+export const useModels = () =>
+  useQuery({ queryKey: keys.models, queryFn: () => api.get<ModelsStatus>('/api/models'), refetchInterval: 10_000 })
+
+export const useNormality = (cameraId: string | undefined) =>
+  useQuery({
+    queryKey: keys.normality(cameraId ?? ''),
+    queryFn: () => api.get<NormalitySummary>(`/api/cameras/${cameraId}/normality`),
+    enabled: !!cameraId,
+  })
+
+const noFetch = () => ({})
+
+/** Per-camera live state pushed over the WebSocket ("camera.live"). */
+export const useLiveState = () =>
+  useQuery<Record<string, CameraLive>>({ queryKey: keys.live, queryFn: noFetch, enabled: false, initialData: {} }).data
+
+/** Learning-from-clip jobs per camera ("normality.job"). */
+export const useNormalityJobs = () =>
+  useQuery<Record<string, NormalityJob>>({ queryKey: keys.normalityJobs, queryFn: noFetch, enabled: false, initialData: {} })
+    .data
+
 // --- mutations ---------------------------------------------------------------
+
+export function useMarkNormal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.post<Incident>(`/api/incidents/${id}/normal`),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: keys.incidents })
+      qc.invalidateQueries({ queryKey: keys.cameras })
+    },
+  })
+}
 
 export function useSetIncidentStatus() {
   const qc = useQueryClient()
@@ -74,8 +116,16 @@ function useCameraMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>
 export const useCreateCamera = () => useCameraMutation((input: CameraInput) => api.post<Camera>('/api/cameras', input))
 
 export const useUpdateCamera = () =>
-  useCameraMutation(({ id, input }: { id: string; input: Partial<CameraInput> }) =>
+  useCameraMutation(({ id, input }: { id: string; input: Partial<CameraInput> & CameraSettings }) =>
     api.patch<Camera>(`/api/cameras/${id}`, input),
+  )
+
+export const useResetNormality = () =>
+  useCameraMutation((id: string) => api.post<Camera>(`/api/cameras/${id}/normality/reset`))
+
+export const useLearnFromClip = () =>
+  useCameraMutation(({ id, videoId }: { id: string; videoId: string }) =>
+    api.post<NormalityJob>(`/api/cameras/${id}/normality/learn`, { library_video_id: videoId }),
   )
 
 export const useDeleteCamera = () => useCameraMutation((id: string) => api.delete(`/api/cameras/${id}`))

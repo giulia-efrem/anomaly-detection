@@ -1,21 +1,25 @@
 {
-  "verified_at": "2026-10-26",
+  "verified_at": "2026-10-27",
   "notes": "Every entry below was checked on the verified_at date: the download link answers without registration and the size is the real Content-Length. Clips are converted to H.264 MP4 on import.",
   "anomaly_types": {
-    "fall": "Fall",
     "fight": "Fight",
-    "running": "Running",
+    "car_accident": "Car accident",
+    "fire_explosion": "Fire or explosion",
+    "shooting": "Gun or shooting",
+    "unusual_object": "Unusual object",
     "unusual_motion": "Unusual motion",
-    "abnormal_object": "Abnormal object",
+    "unusual_posture": "Unusual posture",
+    "loitering": "Loitering",
+    "crowding": "Crowding",
     "normal": "Normal"
   },
   "datasets": [
     {
       "id": "ur-fall",
       "name": "UR Fall Detection Dataset",
-      "description": "70 short indoor sequences recorded with a Kinect in an office at the University of Rzeszow: 30 falls and 40 everyday activities such as walking, sitting down, lying on a bed and picking things up. Only the RGB half of each video is kept.",
+      "description": "70 short indoor sequences recorded with a Kinect in an office at the University of Rzeszow: 30 falls and 40 everyday activities such as walking, sitting down, lying on a bed and picking things up. Falls are tagged as unusual posture for the scene normality model. Only the RGB half of each video is kept.",
       "anomaly_types": [
-        "fall"
+        "unusual_posture"
       ],
       "has_normal": true,
       "clip_count": 70,
@@ -408,9 +412,8 @@
       "name": "CUHK Avenue Dataset",
       "description": "37 videos from one fixed camera on a campus avenue. The 16 training videos show only normal walking; the 21 test videos add running, throwing bags and papers, dancing and walking in the wrong direction.",
       "anomaly_types": [
-        "running",
         "unusual_motion",
-        "abnormal_object"
+        "unusual_object"
       ],
       "has_normal": true,
       "clip_count": 37,
@@ -433,7 +436,7 @@
       "description": "98 clips of about 200 frames from two elevated cameras over pedestrian walkways (Ped1 and Ped2). Training clips contain only pedestrians; test clips include bikers, skaters, small carts, wheelchairs and people crossing the grass.",
       "anomaly_types": [
         "unusual_motion",
-        "abnormal_object"
+        "unusual_object"
       ],
       "has_normal": true,
       "clip_count": 98,
@@ -449,6 +452,151 @@
         "filename": "UCSD_Anomaly_Dataset.tar.gz",
         "url": "http://www.svcl.ucsd.edu/projects/anomaly/UCSD_Anomaly_Dataset.tar.gz"
       }
+    },
+    {
+      "id": "veghe-demo",
+      "name": "Veghe demo clips (Wikimedia Commons)",
+      "description": "Nine short public clips picked to demonstrate the pretrained detectors: three car collisions (two street CCTV, one dashcam), four fires or explosions and two scenes with handguns. Every clip is public domain, CC0 or Creative Commons with attribution; the author and license of each clip are listed below. Real attacks and crashes with victims were left out on purpose. 480p versions, about 3 minutes in total.",
+      "anomaly_types": [
+        "car_accident",
+        "fire_explosion",
+        "shooting"
+      ],
+      "has_normal": false,
+      "clip_count": 9,
+      "size_bytes": 57609699,
+      "license": "Per clip: public domain, CC0, CC BY 3.0 or CC BY-SA 4.0",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Licensing",
+      "source_url": "https://commons.wikimedia.org/",
+      "citation": "Credit each author as listed per clip (Wikimedia Commons file pages).",
+      "importer": "files_meta",
+      "download": {
+        "kind": "files",
+        "files": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/3/36/Jilin_Tonghua_car_rear-end_collision_accident%2C_2025-03-11.webm/Jilin_Tonghua_car_rear-end_collision_accident%2C_2025-03-11.webm.480p.vp9.webm",
+            "name": "crash-jilin.webm",
+            "size_bytes": 4159185,
+            "key": "crash-jilin",
+            "title": "Street CCTV: a van hits a parked car",
+            "anomaly_types": [
+              "car_accident"
+            ],
+            "license": "Public domain",
+            "author": "CCTV footage does not create a copyright",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Jilin_Tonghua_car_rear-end_collision_accident%2C_2025-03-11.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/2/25/NYPD_WANTED_-_Leaving_the_Scene_%28Staten_Island%29.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "name": "crash-staten-island.webm",
+            "size_bytes": 870807,
+            "key": "crash-staten-island",
+            "title": "Residential street: a pickup hits a parked car",
+            "anomaly_types": [
+              "car_accident"
+            ],
+            "license": "Public domain",
+            "author": "NYPD",
+            "page_url": "https://commons.wikimedia.org/wiki/File:NYPD_WANTED_-_Leaving_the_Scene_%28Staten_Island%29.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/7/79/The_van_in_front_suddenly_changed_lanes_and_caused_the_vehicle_to_rear-end_collision.webm/The_van_in_front_suddenly_changed_lanes_and_caused_the_vehicle_to_rear-end_collision.webm.480p.vp9.webm",
+            "name": "crash-dashcam.webm",
+            "size_bytes": 6144147,
+            "key": "crash-dashcam",
+            "title": "Dashcam: rear-end collision after a lane change",
+            "anomaly_types": [
+              "car_accident"
+            ],
+            "license": "Public domain",
+            "author": "CCTV footage does not create a copyright",
+            "page_url": "https://commons.wikimedia.org/wiki/File:The_van_in_front_suddenly_changed_lanes_and_caused_the_vehicle_to_rear-end_collision.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/10/Nu_Venture_Bus_Fire_%2818_September_2018%29%282%29.webm/Nu_Venture_Bus_Fire_%2818_September_2018%29%282%29.webm.480p.vp9.webm",
+            "name": "fire-bus.webm",
+            "size_bytes": 1694032,
+            "key": "fire-bus",
+            "title": "Double-decker bus on fire at night",
+            "anomaly_types": [
+              "fire_explosion"
+            ],
+            "license": "CC0",
+            "author": "JOHN K THORNE PHOTOGRAPHY  (JOHN K THORNE FILMS)",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Nu_Venture_Bus_Fire_%2818_September_2018%29%282%29.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/e/eb/Hydrogen_balloon_explosion_2.webm/Hydrogen_balloon_explosion_2.webm.480p.vp9.webm",
+            "name": "explosion-balloon.webm",
+            "size_bytes": 2150946,
+            "key": "explosion-balloon",
+            "title": "Hydrogen balloon fireball (demonstration)",
+            "anomaly_types": [
+              "fire_explosion"
+            ],
+            "license": "CC BY-SA 4.0",
+            "author": "Maxim Bilovitskiy",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Hydrogen_balloon_explosion_2.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Gas_cylinder_blast_in_dharti-3_at_new_ranip.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "name": "explosion-gas-cylinder.webm",
+            "size_bytes": 29665096,
+            "key": "explosion-gas-cylinder",
+            "title": "Gas cylinder blast in a housing estate, smoke and fire",
+            "anomaly_types": [
+              "fire_explosion"
+            ],
+            "license": "CC BY 3.0",
+            "author": "clash with Amish",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Gas_cylinder_blast_in_dharti-3_at_new_ranip.webm",
+            "trim": [
+              0,
+              60
+            ]
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b6/Vancouver_Rioters_amongst_the_blazing_car_fire.webm/Vancouver_Rioters_amongst_the_blazing_car_fire.webm.480p.vp9.webm",
+            "name": "fire-car-riot.webm",
+            "size_bytes": 5744044,
+            "key": "fire-car-riot",
+            "title": "Street riot with a burning car",
+            "anomaly_types": [
+              "fire_explosion",
+              "crowding"
+            ],
+            "license": "CC BY 3.0",
+            "author": "TheDigitalLearner",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Vancouver_Rioters_amongst_the_blazing_car_fire.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/3/30/MCAS_Iwakuni_SNCO_Pistol_Qualifications_2025_%28955289%29.webm/MCAS_Iwakuni_SNCO_Pistol_Qualifications_2025_%28955289%29.webm.480p.vp9.webm",
+            "name": "gun-pistol-range.webm",
+            "size_bytes": 5098502,
+            "key": "gun-pistol-range",
+            "title": "Pistol range: people firing handguns",
+            "anomaly_types": [
+              "shooting"
+            ],
+            "license": "Public domain",
+            "author": "U.S. Marine Corps video by Lance Cpl. Eliza Fremont",
+            "page_url": "https://commons.wikimedia.org/wiki/File:MCAS_Iwakuni_SNCO_Pistol_Qualifications_2025_%28955289%29.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Robbery_Suspects_Caught_on_Surveillance_Camera.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "name": "gun-office-robbery.webm",
+            "size_bytes": 2082940,
+            "key": "gun-office-robbery",
+            "title": "Office CCTV: armed robbery, a handgun is drawn",
+            "anomaly_types": [
+              "shooting"
+            ],
+            "license": "Public domain",
+            "author": "Los Angeles Police Department",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Robbery_Suspects_Caught_on_Surveillance_Camera.webm"
+          }
+        ]
+      }
     }
   ],
   "excluded": [
@@ -456,6 +604,11 @@
       "name": "Multiple Cameras Fall Dataset (Universite de Montreal)",
       "source_url": "https://www.iro.umontreal.ca/~labimage/Dataset/",
       "reason": "Downloads without registration but is 3.8 GB, above the 2 GB limit."
+    },
+    {
+      "name": "Wikimedia Commons CCTV of fatal crashes and attacks",
+      "source_url": "https://commons.wikimedia.org/wiki/Category:CCTV_footage",
+      "reason": "Freely licensed, but they show real people being killed or injured. Not used for a demo."
     }
   ]
 }

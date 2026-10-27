@@ -15,6 +15,8 @@ interface CameraGridProps {
   error: unknown
   onRetry: () => void
   live: LiveAnomaly | null
+  /** Cameras with any anomaly above threshold right now. */
+  alarmIds: Set<string>
   focusId: string | null
   onFocus: (id: string) => void
   slotsLeft: number
@@ -29,6 +31,7 @@ export default function CameraGrid({
   error,
   onRetry,
   live,
+  alarmIds,
   focusId,
   onFocus,
   slotsLeft,
@@ -85,7 +88,7 @@ export default function CameraGrid({
     <section aria-label="Cameras" className={GRID}>
       <FocusTile camera={focus} live={live?.camera_id === focus.id ? live : null} />
       {rest.map((c) => (
-        <CameraTile key={c.id} camera={c} onFocus={() => onFocus(c.id)} />
+        <CameraTile key={c.id} camera={c} alarm={alarmIds.has(c.id)} onFocus={() => onFocus(c.id)} />
       ))}
       <AddCameraTile slotsLeft={slotsLeft} onClick={onAddCamera} />
     </section>

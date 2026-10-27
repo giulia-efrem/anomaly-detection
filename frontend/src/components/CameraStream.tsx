@@ -10,7 +10,14 @@ import { cx } from '../ui/cx'
  * Live MJPEG picture that fills its box. Shows a "Connecting" skeleton until the
  * first frame and an "Offline" state with Retry when the stream fails.
  */
-export default function CameraStream({ camera, compact = false }: { camera: Camera; compact?: boolean }) {
+interface CameraStreamProps {
+  camera: Camera
+  compact?: boolean
+  /** Draw the pipeline's boxes, track ids and poses into the picture. */
+  overlay?: boolean
+}
+
+export default function CameraStream({ camera, compact = false, overlay = false }: CameraStreamProps) {
   const [attempt, setAttempt] = useState(0)
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
@@ -23,7 +30,7 @@ export default function CameraStream({ camera, compact = false }: { camera: Came
     if (camera.status === 'live') setAttempt((a) => a + 1)
   }
 
-  const src = `${streamSrc(camera)}?a=${attempt}&s=${encodeURIComponent(camera.source)}`
+  const src = `${streamSrc(camera)}?a=${attempt}&s=${encodeURIComponent(camera.source)}${overlay ? '&overlay=1' : ''}`
   const offline = camera.status === 'offline' || failedSrc === src
   const loaded = loadedSrc === src
 

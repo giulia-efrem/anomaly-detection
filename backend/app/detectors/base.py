@@ -15,6 +15,11 @@ from typing import Any
 import numpy as np
 
 VEHICLES = frozenset({"car", "truck", "bus", "motorcycle"})
+# Furniture and fittings: part of the scene, not events. Not drawn on overlays and never an
+# "unusual object" (a chair pushed to another desk is not a security event).
+SCENERY = frozenset({"chair", "dining table", "couch", "bed", "potted plant", "tv", "bench", "toilet", "sink",
+                     "refrigerator", "oven", "microwave", "clock", "vase", "book", "laptop", "keyboard", "mouse",
+                     "remote", "traffic light", "fire hydrant", "stop sign", "parking meter"})
 
 
 @dataclass
@@ -34,6 +39,11 @@ class TrackedObject:
     @property
     def height(self) -> float:
         return max(self.box[3] - self.box[1], 1e-6)
+
+    @property
+    def size(self) -> float:
+        """Longer box side in frame heights (16:9 frames), so a person lying down still counts as large."""
+        return max(self.height, (self.box[2] - self.box[0]) * 16 / 9)
 
     @property
     def speed(self) -> float:

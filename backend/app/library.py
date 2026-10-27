@@ -133,7 +133,7 @@ def _download(job: Job, url: str, dst: Path, expected: int | None = None) -> Non
         return
     dst.parent.mkdir(parents=True, exist_ok=True)
     part = dst.with_name(dst.name + ".part")
-    headers = {"User-Agent": "Veghe/0.2 (research dashboard)"}
+    headers = {"User-Agent": config.USER_AGENT}
     with httpx.stream("GET", url, follow_redirects=True, timeout=httpx.Timeout(30, read=120), headers=headers) as r:
         r.raise_for_status()
         if job.bytes_total is None and r.headers.get("content-length"):
@@ -178,6 +178,7 @@ class ClipSpec:
     src: Path | None = None  # a video file
     frames: tuple[str, float] | None = None  # (printf pattern, fps) for image sequences
     crop: str | None = None
+    trim: tuple[float, float] | None = None  # (start, duration) in seconds
 
 
 def _num(name: str) -> int:
@@ -193,7 +194,7 @@ def _import_ur_fall(root: Path, ds: dict[str, Any]) -> list[ClipSpec]:
         clips.append(ClipSpec(
             key=f"{kind}-{num}",
             title=f"{'Fall' if is_fall else 'Daily activity'} {num}",
-            anomaly_types=["fall"] if is_fall else ["normal"],
+            anomaly_types=["unusual_posture"] if is_fall else ["normal"],
             src=f,
             crop="crop=iw/2:ih:iw/2:0",  # keep the RGB half, drop the depth map
         ))
@@ -258,7 +259,18 @@ def _import_ucsd(root: Path, ds: dict[str, Any]) -> list[ClipSpec]:
     return clips
 
 
+def _import_files_meta(root: Path, ds: dict[str, Any]) -> list[ClipSpec]:
+    """One clip per listed file, with its own title, anomaly types and optional trim."""
+    clips = []
+    for f in ds["download"]["files"]:
+        trim = tuple(f["trim"]) if f.get("trim") else None
+        clips.append(ClipSpec(key=f["key"], title=f["title"], anomaly_types=f["anomaly_types"],
+                              src=root / f["name"], trim=trim))  # type: ignore[arg-type]
+    return clips
+
+
 IMPORTERS: dict[str, Callable[[Path, dict[str, Any]], list[ClipSpec]]] = {
+    "files_meta": _import_files_meta,
     "ur_fall": _import_ur_fall,
     "fight_surv": _import_fight_surv,
     "avenue": _import_avenue,
@@ -305,7 +317,7 @@ def _convert_clips(job: Job, ds: dict[str, Any], clips: list[ClipSpec]) -> None:
                 media.frames_to_h264(clip.frames[0], video, clip.frames[1])
             else:
                 assert clip.src is not None
-                media.to_h264(clip.src, video, crop=clip.crop)
+                media.to_h264(clip.src, video, crop=clip.crop, trim=clip.trim)
         register_clip(
             video_id=f"{ds['id']}-{clip.key}", title=clip.title, dataset_id=ds["id"],
             dataset_name=ds["name"], anomaly_types=clip.anomaly_types, origin="catalog",

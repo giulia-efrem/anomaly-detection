@@ -1,6 +1,11 @@
 // Event contract (see CLAUDE.md) plus the extra fields the backend returns.
 
-export type IncidentType = 'fight' | 'fall' | 'unusual_posture' | 'other'
+export const SUPERVISED_TYPES = ['fight', 'car_accident', 'fire_explosion', 'shooting'] as const
+export const UNSUPERVISED_TYPES = ['unusual_object', 'unusual_motion', 'unusual_posture', 'loitering', 'crowding'] as const
+export type SupervisedType = (typeof SUPERVISED_TYPES)[number]
+export type UnsupervisedType = (typeof UNSUPERVISED_TYPES)[number]
+export type IncidentType = SupervisedType | UnsupervisedType | 'other'
+export type ThresholdKey = SupervisedType | 'unsupervised'
 export type Method = 'supervised' | 'unsupervised'
 export type RaisedBy = Method | 'both'
 export type IncidentStatus = 'needs_review' | 'confirmed' | 'false_alarm'
@@ -28,6 +33,11 @@ export interface Incident {
   caption: string | null
   clip_url: string | null
   status: IncidentStatus
+  // Not in the contract
+  thumbnail_url: string | null
+  /** Scene normality reason when that model contributed. */
+  reason: UnsupervisedType | null
+  details: { class_scores?: Partial<Record<SupervisedType, number>>; keys?: string[]; clip_seconds?: number }
 }
 
 export type SourceType = 'rtsp' | 'webcam' | 'file'
@@ -48,6 +58,8 @@ export interface Camera {
   library_video_id: string | null
   status: StreamStatus
   position: number
+  thresholds: Record<ThresholdKey, number>
+  learn_seconds: number
 }
 
 export interface CameraInput {
@@ -57,14 +69,84 @@ export interface CameraInput {
   library_video_id?: string | null
 }
 
-/** An anomaly that is above threshold right now on one camera (step 3). */
+export interface CameraSettings {
+  supervised?: 'on' | 'off'
+  unsupervised?: 'learning' | 'off'
+  thresholds?: Partial<Record<ThresholdKey, number>>
+  learn_seconds?: number
+}
+
+/** What the pipeline sees on one camera right now ("camera.live", about once a second). */
+export interface CameraLive {
+  camera_id: string
+  people_count: number
+  scores: Record<SupervisedType, number>
+  unsupervised: { score: number; reason: UnsupervisedType | null; text: string | null }
+  learning_progress: number | null
+  alerts: { key: ThresholdKey; incident_id: string | null; above_threshold_s: number }[]
+  fps: number
+}
+
+/** An anomaly that is above threshold right now on one camera. */
 export interface LiveAnomaly {
   camera_id: string
-  incident_id: string
+  incident_id: string | null
   type: IncidentType
   scores: MethodScores
   thresholds: MethodThresholds
   above_threshold_s: number
+  text: string | null
+}
+
+export interface NormalityJob {
+  camera_id: string
+  title: string
+  kind: 'clip' | 'incident'
+  progress: number
+  stage: 'queued' | 'learning' | 'done' | 'error'
+  seconds_added: number
+  error: string | null
+}
+
+export interface NormalitySummary {
+  state: Camera['unsupervised']
+  learn_seconds: number
+  reasons: Record<UnsupervisedType, string>
+  job: NormalityJob | null
+  frames: number
+  seconds: number
+  updated_at: string | null
+  grid: [number, number]
+  classes: { cls: string; frames: number; share: number }[]
+  people_p99: number | null
+  poses: number
+  hours: number[]
+}
+
+export interface ModelInfo {
+  id: string
+  name: string
+  role: string
+  family: 'base' | 'pretrained' | 'thesis'
+  classes: string[]
+  license: string
+  license_url: string
+  source_url: string
+  size_bytes: number
+  downloaded: boolean
+  loaded: boolean
+  device: string | null
+  vram_mb: number | null
+  error: string | null
+}
+
+export interface ModelsStatus {
+  verified_at: string
+  ready: boolean
+  device: string
+  gpu: { name: string; used_mb: number; total_mb: number } | null
+  models: ModelInfo[]
+  feedback: Partial<Record<'confirmed' | 'false_alarm' | 'normal', number>>
 }
 
 export interface PipelineStage {
@@ -131,6 +213,7 @@ export interface CatalogDataset {
   citation: string
   clips_imported: number
   job: LibraryJob | null
+  credits: { title: string; author: string; license: string; page_url: string }[]
 }
 
 export interface Catalog {

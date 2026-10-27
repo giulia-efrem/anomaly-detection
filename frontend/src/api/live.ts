@@ -1,13 +1,16 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import type { Camera, Catalog, Incident, LibraryJob, StreamStatus } from '../types'
+import type { Camera, CameraLive, Catalog, Incident, LibraryJob, NormalityJob, StreamStatus } from '../types'
 import { keys } from './hooks'
 
 type LiveEvent =
   | { type: 'hello' }
   | { type: 'camera.status'; camera_id: string; status: StreamStatus }
   | { type: 'cameras.changed' }
+  | { type: 'incident.created'; incident: Incident }
   | { type: 'incident.updated'; incident: Incident }
+  | ({ type: 'camera.live' } & CameraLive)
+  | { type: 'normality.job'; job: NormalityJob }
   | { type: 'library.job'; job: LibraryJob }
   | { type: 'library.changed' }
 
@@ -27,11 +30,32 @@ function apply(qc: QueryClient, e: LiveEvent) {
       qc.invalidateQueries({ queryKey: keys.cameras })
       qc.invalidateQueries({ queryKey: keys.status })
       break
-    case 'incident.updated':
-      qc.setQueryData<Incident[]>(keys.incidents, (list) =>
-        list?.map((i) => (i.id === e.incident.id ? e.incident : i)),
+    case 'incident.created':
+    case 'incident.updated': {
+      const inc = e.incident
+      qc.setQueryData<Incident[]>(keys.incidents, (list) => {
+        if (!list) return list
+        return list.some((i) => i.id === inc.id) ? list.map((i) => (i.id === inc.id ? inc : i)) : [inc, ...list]
+      })
+      if (e.type === 'incident.created') qc.invalidateQueries({ queryKey: keys.cameras })
+      break
+    }
+    case 'camera.live': {
+      const { type: _type, ...state } = e
+      qc.setQueryData<Record<string, CameraLive>>(keys.live, (m) => ({ ...m, [state.camera_id]: state }))
+      // Keep the stored learning state honest without refetching every second.
+      qc.setQueryData<Camera[]>(keys.cameras, (list) =>
+        list?.map((c) =>
+          c.id === state.camera_id && c.people_count !== state.people_count ? { ...c, people_count: state.people_count } : c,
+        ),
       )
-      qc.invalidateQueries({ queryKey: keys.cameras })
+      break
+    }
+    case 'normality.job':
+      qc.setQueryData<Record<string, NormalityJob>>(keys.normalityJobs, (m) => ({ ...m, [e.job.camera_id]: e.job }))
+      if (e.job.stage === 'done' || e.job.stage === 'error') {
+        qc.invalidateQueries({ queryKey: keys.normality(e.job.camera_id) })
+      }
       break
     case 'library.job': {
       const job = e.job

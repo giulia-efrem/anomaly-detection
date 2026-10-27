@@ -11,12 +11,14 @@ interface ChipProps {
   /** Chips drawn over video get a translucent dark fill. */
   onVideo?: boolean
   className?: string
+  title?: string
 }
 
 /** Small read-only label: model state, dataset, anomaly type. */
-export function Chip({ children, dot, active = true, onVideo = false, className }: ChipProps) {
+export function Chip({ children, dot, active = true, onVideo = false, className, title }: ChipProps) {
   return (
     <span
+      title={title}
       className={cx(
         'inline-flex h-6 items-center gap-1.5 rounded-lg px-2 font-cond text-[12px] whitespace-nowrap text-ink-2',
         onVideo ? 'bg-[rgba(8,14,22,0.74)] backdrop-blur-sm' : 'bg-raised',

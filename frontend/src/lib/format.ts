@@ -1,20 +1,14 @@
 import type { Camera, IncidentType, RaisedBy } from '../types'
-
-const TYPE_LABELS: Record<IncidentType, string> = {
-  fight: 'Fight',
-  fall: 'Fall',
-  unusual_posture: 'Unusual posture',
-  other: 'Other',
-}
+import { TYPE_LABELS } from './classes'
 
 export function typeLabel(type: IncidentType): string {
-  return TYPE_LABELS[type]
+  return TYPE_LABELS[type] ?? type
 }
 
 export const RAISED_BY_LABELS: Record<RaisedBy, string> = {
   both: 'Both models',
-  supervised: 'Supervised only',
-  unsupervised: 'Unsupervised only',
+  supervised: 'Pretrained model only',
+  unsupervised: 'Scene normality only',
 }
 
 /** "2026-10-25T11:39:00" -> "11:39:00", without timezone conversion. */
@@ -64,20 +58,21 @@ export interface ChipState {
 
 export function supervisedChip(camera: Camera): ChipState {
   return camera.supervised === 'on'
-    ? { label: 'Supervised on', active: true }
-    : { label: 'Supervised off', active: false }
+    ? { label: 'Pretrained on', active: true }
+    : { label: 'Pretrained off', active: false }
 }
 
-export function unsupervisedChip(camera: Camera): ChipState {
+/** `progress` overrides the camera's stored value with the live one. */
+export function unsupervisedChip(camera: Camera, progress?: number | null): ChipState {
   switch (camera.unsupervised) {
     case 'ready':
-      return { label: 'Unsupervised ready', active: true }
+      return { label: 'Scene model ready', active: true }
     case 'collecting':
       return { label: 'Collecting footage', active: false }
     case 'learning':
-      return { label: `Learning ${Math.round((camera.learning_progress ?? 0) * 100)}%`, active: false }
+      return { label: `Learning ${Math.floor((progress ?? camera.learning_progress ?? 0) * 100)}%`, active: false }
     case 'off':
-      return { label: 'Unsupervised off', active: false }
+      return { label: 'Scene model off', active: false }
   }
 }
 

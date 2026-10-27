@@ -1,8 +1,13 @@
+import { Layers, User } from 'lucide-react'
+import { useLiveState } from '../api/hooks'
 import { supervisedChip, unsupervisedChip } from '../lib/format'
 import type { Camera } from '../types'
+import { Button } from '../ui/Button'
 import { Chip, Pill } from '../ui/Chip'
+import { cx } from '../ui/cx'
 import StatusDot from '../ui/StatusDot'
 import CameraStream from './CameraStream'
+import { useOverlay } from './useOverlay'
 
 const HEALTH: Record<Camera['status'], string> = {
   live: 'var(--color-healthy)',
@@ -11,8 +16,9 @@ const HEALTH: Record<Camera['status'], string> = {
 }
 
 export function ModelChips({ camera, compact = false }: { camera: Camera; compact?: boolean }) {
+  const live = useLiveState()[camera.id]
   const sup = supervisedChip(camera)
-  const unsup = unsupervisedChip(camera)
+  const unsup = unsupervisedChip(camera, live?.learning_progress)
   const full = (
     <>
       <Chip onVideo dot="var(--color-sup)" active={sup.active}>
@@ -39,6 +45,35 @@ export function ModelChips({ camera, compact = false }: { camera: Camera; compac
   )
 }
 
+export function PeopleCount({ camera }: { camera: Camera }) {
+  const live = useLiveState()[camera.id]
+  if (camera.status !== 'live' || !live) return null
+  const n = live.people_count
+  return (
+    <Chip onVideo>
+      <User size={12} aria-hidden="true" />
+      <span className="sr-only">People in view:</span>
+      {n}
+    </Chip>
+  )
+}
+
+export function OverlayToggle({ on, onToggle, className }: { on: boolean; onToggle: () => void; className?: string }) {
+  return (
+    <Button
+      variant="overlay"
+      size="sm"
+      iconOnly
+      icon={Layers}
+      aria-pressed={on}
+      aria-label={on ? 'Hide boxes and poses' : 'Show boxes and poses'}
+      title={on ? 'Hide boxes and poses' : 'Show boxes and poses'}
+      onClick={onToggle}
+      className={cx(on && 'bg-ink text-on-light hover:bg-white hover:text-on-light', className)}
+    />
+  )
+}
+
 export function CameraTitle({ camera, large = false }: { camera: Camera; large?: boolean }) {
   return (
     <div className="min-w-0">
@@ -56,13 +91,19 @@ export function CameraTitle({ camera, large = false }: { camera: Camera; large?:
 
 interface CameraTileProps {
   camera: Camera
+  /** An anomaly is above threshold on this camera right now. */
+  alarm?: boolean
   onFocus: () => void
 }
 
-export default function CameraTile({ camera, onFocus }: CameraTileProps) {
+export default function CameraTile({ camera, alarm = false, onFocus }: CameraTileProps) {
+  const [overlay, toggleOverlay] = useOverlay(camera.id)
   return (
-    <article className="@container relative aspect-video overflow-hidden rounded-xl bg-video">
-      <CameraStream camera={camera} compact />
+    <article
+      className={cx('@container relative aspect-video overflow-hidden rounded-xl bg-video', alarm && 'ring-[1.5px] ring-alarm')}
+      aria-label={alarm ? `${camera.name}: anomaly detected` : undefined}
+    >
+      <CameraStream camera={camera} compact overlay={overlay} />
 
       <button
         type="button"
@@ -81,8 +122,14 @@ export default function CameraTile({ camera, onFocus }: CameraTileProps) {
         )}
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-end gap-1 bg-gradient-to-t from-[rgba(5,9,15,0.85)] to-transparent px-2 pt-6 pb-2">
-        <ModelChips camera={camera} compact />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end gap-1 bg-gradient-to-t from-[rgba(5,9,15,0.85)] to-transparent px-2 pt-6 pb-2">
+        <div className="flex min-w-0 flex-wrap items-end gap-1">
+          <ModelChips camera={camera} compact />
+          <span className="hidden @[260px]:contents">
+            <PeopleCount camera={camera} />
+          </span>
+        </div>
+        <OverlayToggle on={overlay} onToggle={toggleOverlay} className="pointer-events-auto relative z-20 ml-auto shrink-0" />
       </div>
     </article>
   )

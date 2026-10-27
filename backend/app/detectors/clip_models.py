@@ -38,7 +38,7 @@ def sample(frames: list[np.ndarray], n: int = CLIP_FRAMES) -> list[np.ndarray]:
 
 class _ClipDetector(Detector):
     window_size = CLIP_FRAMES
-    every_s = 1.6  # a new prediction every 8 analysis frames; windows overlap by half
+    every_s = 2.0  # a new prediction every 2 s; each window covers the last 16 analysis frames
     size = 224
     mean = 0.0
     std = 1.0

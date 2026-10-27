@@ -4,7 +4,7 @@ About five times a second it takes the newest frame of each live camera and runs
 batched across cameras:
 
 1. YOLO11s object detection, then ByteTrack per camera (track ids, speed, age)
-2. YOLO11n pose for cameras with people in view (every other frame)
+2. YOLO11n pose for cameras with people in view (every third frame)
 3. the supervised plugins, each only when it makes sense:
    fight when two or more people are close, crash when vehicles are present,
    threat detector when a person is present, fire once per second;
@@ -43,8 +43,9 @@ log = logging.getLogger("veghe.pipeline")
 ANALYSIS_FPS = 5.0
 SMALL_WIDTH = 320  # frames kept for the clip models
 DET_CONF = 0.25
-POSE_EVERY = 2  # pose on every second analysis frame
-POSE_MIN_HEIGHT = 0.08  # people smaller than this (fraction of frame height) get no keypoints
+DET_IMGSZ = 512  # 960 x 540 frames become 512 x 288; 640 cost 50 % more for little gain here
+POSE_EVERY = 3  # pose on every third analysis frame
+POSE_MIN_HEIGHT = 0.08  # people smaller than this (longer box side, frame heights) get no keypoints
 TRACK_FORGET_S = 3.0
 LIVE_EVENT_S = 1.0
 
@@ -176,7 +177,7 @@ models = Models()
 
 def detect(images: list[np.ndarray]) -> list[Any]:
     """COCO detection for a batch of frames (caller holds models.lock)."""
-    return models.detector.predict(images, imgsz=640, conf=DET_CONF, device=models.device,
+    return models.detector.predict(images, imgsz=DET_IMGSZ, conf=DET_CONF, device=models.device,
                                    quantize=16 if models.device == "cuda" else None, verbose=False)
 
 
@@ -217,10 +218,10 @@ def attach_poses(objects_per_image: list[list[TrackedObject]], images: list[np.n
                  wanted: list[bool] | None = None) -> None:
     """Run the pose model and give each tracked person the keypoints of the best matching pose box."""
     todo = [i for i, objs in enumerate(objects_per_image)
-            if (wanted is None or wanted[i]) and any(o.cls == "person" and o.height >= POSE_MIN_HEIGHT for o in objs)]
+            if (wanted is None or wanted[i]) and any(o.cls == "person" and o.size >= POSE_MIN_HEIGHT for o in objs)]
     if not todo or models.pose is None:
         return
-    results = models.pose.predict([images[i] for i in todo], imgsz=640, conf=0.3, device=models.device,
+    results = models.pose.predict([images[i] for i in todo], imgsz=DET_IMGSZ, conf=0.3, device=models.device,
                                   quantize=16 if models.device == "cuda" else None, verbose=False)
     for i, r in zip(todo, results):
         if r.keypoints is None or len(r.boxes) == 0:
@@ -253,6 +254,7 @@ class Pipeline(threading.Thread):
         self._stop_evt = threading.Event()
         self._states_lock = threading.Lock()
         self.loop_ms = 0.0
+        self.stage_ms: dict[str, float] = {}  # moving average per stage, for /api/status
         self.analysed_fps: dict[str, float] = {}
         self.alerts = None  # set in run() to avoid an import cycle
         self.error: str | None = None
@@ -346,15 +348,26 @@ class Pipeline(threading.Thread):
             return
 
         images = [f.image for _, _, f in batch]
+        clock = [time.perf_counter()]
+
+        def lap(name: str) -> None:
+            now = time.perf_counter()
+            self.stage_ms[name] = round(0.9 * self.stage_ms.get(name, 0.0) + 0.1 * (now - clock[0]) * 1000, 1)
+            clock[0] = now
+
         with models.lock:
+            lap("wait_gpu")
             results = detect(images)
+            lap("detect")
             objects_per_image = []
             for (cam, st, frame), res in zip(batch, results):
                 learning = cam["unsupervised"] == "learning"
                 objects_per_image.append(update_tracks(st, res, frame.timestamp, frame.image, learning))
             # Pose only where scene normality uses it, and on every other frame.
             wanted = [cam["unsupervised"] != "off" and st.ticks % POSE_EVERY == 0 for cam, st, _ in batch]
+            lap("track")
             attach_poses(objects_per_image, images, wanted)
+            lap("pose")
             windows = []
             for (cam, st, frame), objs in zip(batch, objects_per_image):
                 dt = min(frame.timestamp - st.last_ts, 0.5) if st.last_ts else 1.0 / ANALYSIS_FPS
@@ -368,12 +381,15 @@ class Pipeline(threading.Thread):
                 st.objects, st.image, st.image_ts = objs, frame.image, frame.timestamp
                 st.det_state.setdefault("_dt", {})["dt"] = dt
                 windows.append(Window(st.camera_id, list(st.frames), list(st.stamps), frame.image, objs))
+            lap("windows")
             self._run_plugins(batch, windows)
+            lap("plugins")
 
         for (cam, st, frame), objs in zip(batch, objects_per_image):
             self._normality(cam, st, objs, frame.timestamp, st.det_state["_dt"]["dt"])
             self.alerts.update(cam, st, frame)
             self._publish(cam, st)
+        lap("normality_alerts")
 
     def _run_plugins(self, batch: list[tuple[dict, CameraState, Any]], windows: list[Window]) -> None:
         for plugin in models.plugins:
@@ -485,7 +501,8 @@ class Pipeline(threading.Thread):
     def summary(self) -> dict[str, Any]:
         live = {cid: round(fps, 1) for cid, fps in self.analysed_fps.items() if cid in self.states}
         return {"ready": models.ready.is_set(), "error": self.error, "device": models.device,
-                "loop_ms": round(self.loop_ms, 1), "clip_ms": round(self.clip_worker.busy_ms, 1), "fps": live,
+                "loop_ms": round(self.loop_ms, 1), "clip_ms": round(self.clip_worker.busy_ms, 1),
+                "stage_ms": self.stage_ms, "fps": live,
                 "plugins": [p.id for p in models.plugins]}
 
 
@@ -542,8 +559,8 @@ class ClipWorker(threading.Thread):
                     for (st, w), s in zip(part, scores):
                         store_scores(plugin, st, w, s)
                     did = True
-                    # Leave the GPU to detection and tracking for a moment between batches.
-                    self._stop_evt.wait(0.5 * spent)
+                    # Leave the GPU to detection and tracking between batches.
+                    self._stop_evt.wait(spent)
             if not did:
                 self._stop_evt.wait(0.05)
 
@@ -599,7 +616,7 @@ def learn_from_video(camera_id: str, path: Path, progress=None, max_seconds: flo
                     if progress and total:
                         progress(idx / total)
             idx += 1
-            if max_seconds and learned >= max_seconds:
+            if max_seconds and idx / fps >= max_seconds:  # by video position, not by flushed frames
                 break
         flush()
     finally:

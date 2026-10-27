@@ -7,7 +7,7 @@ from typing import Iterable
 import cv2
 import numpy as np
 
-from .detectors.base import VEHICLES, Box, TrackedObject
+from .detectors.base import SCENERY, VEHICLES, Box, TrackedObject
 
 # BGR versions of the design tokens.
 INK = (246, 238, 231)
@@ -15,11 +15,6 @@ UNSUP = (242, 169, 90)  # blue, scene normality
 SUP = (74, 176, 242)  # amber, supervised models
 ALARM = (107, 107, 255)  # red, live anomaly
 MUTED = (178, 157, 140)
-
-# Furniture and fittings: always in view, so drawing them only hides what matters.
-SCENERY = frozenset({"chair", "dining table", "couch", "bed", "potted plant", "tv", "bench", "toilet", "sink",
-                     "refrigerator", "oven", "microwave", "clock", "vase", "book", "laptop", "keyboard", "mouse",
-                     "remote", "traffic light", "fire hydrant", "stop sign", "parking meter"})
 
 SKELETON = [(5, 7), (7, 9), (6, 8), (8, 10), (5, 6), (5, 11), (6, 12), (11, 12), (11, 13), (13, 15), (12, 14),
             (14, 16), (0, 5), (0, 6)]

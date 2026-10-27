@@ -3,7 +3,8 @@ import Layout from './components/Layout'
 import CamerasPage from './pages/CamerasPage'
 import IncidentsPage from './pages/IncidentsPage'
 import LivePage from './pages/LivePage'
-import { ComparePage, NotFoundPage, TrainingPage } from './pages/PlaceholderPages'
+import { ComparePage, NotFoundPage } from './pages/PlaceholderPages'
+import TrainingPage from './pages/TrainingPage'
 import TestVideosPage from './pages/TestVideosPage'
 
 export const router = createBrowserRouter([

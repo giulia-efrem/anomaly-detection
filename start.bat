@@ -10,6 +10,13 @@ if not exist "backend\.venv\python.exe" (
   exit /b 1
 )
 
+if not exist "data\models\yolo11s.pt" (
+  echo Downloading the detection models, this happens only once...
+  pushd backend
+  ".venv\python.exe" scripts\download_models.py
+  popd
+)
+
 if not exist "frontend\node_modules" (
   echo Installing frontend packages, this happens only once...
   pushd frontend

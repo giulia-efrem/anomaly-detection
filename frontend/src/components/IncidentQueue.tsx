@@ -7,7 +7,7 @@ import { Panel } from '../ui/Panel'
 import { EmptyState, ErrorState, Skeleton } from '../ui/States'
 import { ToggleGroup } from '../ui/ToggleGroup'
 import IncidentCard from './IncidentCard'
-import { useIncidentDecision } from './useIncidentDecision'
+import { useIncidentDecision, useMarkNormalDecision } from './useIncidentDecision'
 
 type Filter = 'all' | RaisedBy
 
@@ -23,6 +23,7 @@ export default function IncidentQueue({ incidents, cameras, isLoading, error, on
   const [filter, setFilter] = useState<Filter>('all')
   const cameraById = new Map((cameras ?? []).map((c) => [c.id, c]))
   const decide = useIncidentDecision(cameraById)
+  const markNormal = useMarkNormalDecision(cameraById)
 
   const open = (incidents ?? []).filter((i) => i.status === 'needs_review')
   const countFor = (f: Filter) => (f === 'all' ? open.length : open.filter((i) => i.raised_by === f).length)
@@ -50,8 +51,8 @@ export default function IncidentQueue({ incidents, cameras, isLoading, error, on
           options={[
             { id: 'all', label: 'All', count: countFor('all') },
             { id: 'both', label: 'Both', count: countFor('both') },
-            { id: 'supervised', label: 'Supervised', count: countFor('supervised') },
-            { id: 'unsupervised', label: 'Unsupervised', count: countFor('unsupervised') },
+            { id: 'supervised', label: 'Pretrained', count: countFor('supervised') },
+            { id: 'unsupervised', label: 'Scene', count: countFor('unsupervised') },
           ]}
         />
       </div>
@@ -73,7 +74,13 @@ export default function IncidentQueue({ incidents, cameras, isLoading, error, on
           />
         ) : (
           visible.map((i) => (
-            <IncidentCard key={i.id} incident={i} camera={cameraById.get(i.camera_id)} onDecide={decide} />
+            <IncidentCard
+              key={i.id}
+              incident={i}
+              camera={cameraById.get(i.camera_id)}
+              onDecide={decide}
+              onNormal={markNormal}
+            />
           ))
         )}
       </div>

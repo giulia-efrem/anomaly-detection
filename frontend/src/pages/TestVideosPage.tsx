@@ -33,7 +33,7 @@ export default function TestVideosPage() {
         title="Test videos"
         description={
           <>
-            Public research datasets with real falls, fights and unusual motion. Download one, play the clips, and turn
+            Public footage with fights, car crashes, fires, guns and unusual motion, plus normal scenes to learn from. Download one, play the clips, and turn
             any clip into a virtual camera that loops like a live feed.
             {catalog.data && ` Links and licenses checked on ${catalog.data.verified_at}.`}
           </>

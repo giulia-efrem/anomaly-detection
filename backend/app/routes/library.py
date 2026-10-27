@@ -56,10 +56,15 @@ def get_catalog() -> dict[str, Any]:
     datasets = []
     for d in cat["datasets"]:
         job = next((j for j in jobs if j["dataset_id"] == d["id"]), None)
+        credits = [
+            {k: f[k] for k in ("title", "author", "license", "page_url")}
+            for f in d["download"].get("files", []) if f.get("author")
+        ]
         datasets.append({
             **{k: v for k, v in d.items() if k not in ("download", "importer")},
             "clips_imported": counts.get(d["id"], 0),
             "job": job,
+            "credits": credits,
         })
     return {
         "verified_at": cat["verified_at"],

@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react'
-import type { Camera, Incident, RaisedBy } from '../types'
+import { CLASS_COLORS, SCENE_COLOR, TYPE_LABELS, typeColor } from '../lib/classes'
+import { RAISED_BY_LABELS } from '../lib/format'
+import { SUPERVISED_TYPES, type Camera, type Incident } from '../types'
 import { Panel, PanelHeader } from '../ui/Panel'
 import { ErrorState, Skeleton } from '../ui/States'
 import { Tabs } from '../ui/Tabs'
 import { tabPanelProps } from '../ui/tabPanelProps'
 
-const MARKER_BG: Record<RaisedBy, string> = {
-  supervised: 'var(--color-sup)',
-  unsupervised: 'var(--color-unsup)',
-  both: 'linear-gradient(to bottom, var(--color-sup) 50%, var(--color-unsup) 50%)',
-}
-
-const LEGEND: { by: RaisedBy; label: string }[] = [
-  { by: 'supervised', label: 'Supervised' },
-  { by: 'unsupervised', label: 'Unsupervised' },
-  { by: 'both', label: 'Both' },
+// One colour per pretrained class; every scene normality reason shares the scene colour.
+const LEGEND: { key: string; label: string; color: string }[] = [
+  ...SUPERVISED_TYPES.map((t) => ({ key: t, label: TYPE_LABELS[t], color: CLASS_COLORS[t] })),
+  { key: 'scene', label: 'Scene normality', color: SCENE_COLOR },
 ]
 
 type WindowId = '15m' | '1h' | '24h' | '7d'
@@ -70,18 +66,22 @@ export default function AlarmTimeline({ cameras, incidents, isLoading, error, on
         description={
           isLoading ? 'Loading' : totalAlarms > 0
             ? `${totalAlarms} ${totalAlarms === 1 ? 'alarm' : 'alarms'} on ${cameraCount} ${cameraCount === 1 ? 'camera' : 'cameras'}`
-            : 'No alarms in this window. Detection starts in step 3; pick a longer window to see older incidents.'
+            : 'No alarms in this window. Pick a longer window to see older incidents.'
         }
         actions={<Tabs items={WINDOWS} value={windowId} onChange={setWindowId} label="Time window" idBase="timeline" />}
       />
 
-      <ul className="mt-2 mb-4 flex items-center gap-4 text-[13px] text-ink-2" aria-label="Legend">
+      <ul className="mt-2 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-2" aria-label="Legend">
         {LEGEND.map((l) => (
-          <li key={l.by} className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: MARKER_BG[l.by] }} />
+          <li key={l.key} className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: l.color }} />
             {l.label}
           </li>
         ))}
+        <li className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-[2px] bg-muted ring-[1.5px] ring-ink" />
+          Raised by both models
+        </li>
       </ul>
 
       <div {...tabPanelProps('timeline', windowId)}>
@@ -116,9 +116,9 @@ export default function AlarmTimeline({ cameras, incidents, isLoading, error, on
                         return (
                           <span
                             key={i.id}
-                            title={`${i.type.replace('_', ' ')}, ${i.alarm_count} alarms`}
-                            className="absolute inset-y-[3px] min-w-[5px] rounded-[2px]"
-                            style={{ left: `${a}%`, width: `${Math.max(b - a, 0)}%`, background: MARKER_BG[i.raised_by] }}
+                            title={`${TYPE_LABELS[i.type]}, ${RAISED_BY_LABELS[i.raised_by].toLowerCase()}, ${i.alarm_count} ${i.alarm_count === 1 ? 'alarm' : 'alarms'}`}
+                            className={`absolute inset-y-[3px] min-w-[5px] rounded-[2px] ${i.raised_by === 'both' ? 'ring-[1.5px] ring-ink' : ''}`}
+                            style={{ left: `${a}%`, width: `${Math.max(b - a, 0)}%`, background: typeColor(i.type) }}
                           />
                         )
                       })}

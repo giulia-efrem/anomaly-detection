@@ -1,7 +1,9 @@
 """Detectors built on YOLOv8 object detectors (Ultralytics).
 
 fire_explosion: YOLOv8n trained on D-Fire (rabahdev), classes smoke and fire.
-    Score = the most confident fire box (smoke counts at 0.85 of its confidence).
+    Score = the most confident fire box (smoke counts at 0.85 of its confidence). Flames
+    flicker: a "fire" box whose pixels do not change between frames (a red bag, a lamp)
+    counts at half its confidence.
     An explosion is a sudden large fire or smoke region together with a sudden
     jump in brightness or motion; it lifts the score.
 shooting: YOLOv8n threat detector (Subh775), classes Gun, explosion, grenade, knife.
@@ -59,6 +61,16 @@ def _motion(a: np.ndarray, b: np.ndarray) -> float:
     return float(cv2.absdiff(ga, gb).mean())
 
 
+def _flicker(a: np.ndarray, b: np.ndarray, box: tuple[float, float, float, float]) -> float:
+    """Mean absolute grey-level change inside a box between two frames."""
+    h, w = a.shape[:2]
+    x1, y1 = int(box[0] * w), int(box[1] * h)
+    x2, y2 = max(x1 + 1, int(box[2] * w)), max(y1 + 1, int(box[3] * h))
+    ga = cv2.cvtColor(a[y1:y2, x1:x2], cv2.COLOR_BGR2GRAY)
+    gb = cv2.cvtColor(b[y1:y2, x1:x2], cv2.COLOR_BGR2GRAY)
+    return float(cv2.absdiff(ga, gb).mean()) if ga.size else 0.0
+
+
 class FireDetector(Detector):
     id = "fire-yolov8n"
     name = "YOLOv8n fire and smoke (D-Fire)"
@@ -68,6 +80,7 @@ class FireDetector(Detector):
     CONF = 0.25
     SMOKE_WEIGHT = 0.85
     MAX_AREA = 0.5
+    STILL = 8.0  # mean grey-level change in a box below which it is not flickering
 
     def warmup(self) -> None:
         self.model = _load_yolo(self.id, self.device)
@@ -86,6 +99,9 @@ class FireDetector(Detector):
     def _score_one(self, w: Window, result) -> dict[str, float]:
         # Boxes over half the image are nearly always haze, glare or a grey sky, not smoke.
         dets = [d for d in _boxes(result) if d[0] in ("fire", "smoke") and _area(d[2]) <= self.MAX_AREA]
+        if len(w.frames) >= 2:
+            dets = [(n, c * 0.5 if n == "fire" and _flicker(w.frames[-2], w.frames[-1], b) < self.STILL else c, b)
+                    for n, c, b in dets]
         self.last_boxes[w.camera_id] = [
             Box(name, conf, box, (40, 90, 255) if name == "fire" else (170, 170, 170)) for name, conf, box in dets
         ]
@@ -139,10 +155,10 @@ class ThreatDetector(Detector):
     id = "threat-yolov8n"
     name = "YOLOv8n threat detector"
     classes = ("shooting",)
-    every_s = 0.4  # about 2.5 times a second while people are present
+    every_s = 0.6  # about 1.7 times a second while people are present
     window_size = 1
     CONF = 0.35
-    HISTORY = 6  # runs, about 2.4 s
+    HISTORY = 5  # runs, about 3 s
     MIN_HITS = 3  # "several frames" before a gun counts fully
     COLORS = {"Gun": (60, 60, 255), "knife": (60, 160, 255), "grenade": (60, 60, 255), "explosion": (40, 90, 255)}
 

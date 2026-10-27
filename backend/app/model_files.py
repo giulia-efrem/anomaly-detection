@@ -63,7 +63,7 @@ def download(model_id: str, force: bool = False, progress: Progress | None = Non
     part = dst.with_name(dst.name + ".part")
     h = hashlib.sha256()
     done = 0
-    headers = {"User-Agent": "Veghe/0.3 (research dashboard)"}
+    headers = {"User-Agent": config.USER_AGENT}
     with httpx.stream("GET", m["url"], follow_redirects=True, headers=headers,
                       timeout=httpx.Timeout(30, read=120)) as r:
         r.raise_for_status()

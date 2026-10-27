@@ -3,8 +3,8 @@ import type { Method } from '../types'
 import { cx } from '../ui/cx'
 
 const METHOD_LABEL: Record<Method, string> = {
-  supervised: 'Supervised',
-  unsupervised: 'Unsupervised',
+  supervised: 'Pretrained',
+  unsupervised: 'Scene',
 }
 
 const METHOD_COLOR: Record<Method, string> = {

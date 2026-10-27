@@ -1,7 +1,8 @@
-import { Cctv, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { Cctv, Pencil, Plus, RefreshCw, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useCameras, useDeleteCamera, usePipelineStatus, useRestartCamera } from '../api/hooks'
 import CameraDialog from '../components/CameraDialog'
+import CameraSettingsDialog from '../components/CameraSettingsDialog'
 import { ModelChips } from '../components/CameraTile'
 import { SOURCE_LABELS } from '../lib/format'
 import type { Camera } from '../types'
@@ -55,6 +56,8 @@ export default function CamerasPage() {
   const [editing, setEditing] = useState<Camera | null>(null)
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState<Camera | null>(null)
+  const [tuningId, setTuningId] = useState<string | null>(null)
+  const tuning = cameras.data?.find((c) => c.id === tuningId) ?? null
 
   const slots = status.data?.camera_slots
   const full = slots ? slots.used >= slots.total : false
@@ -73,7 +76,7 @@ export default function CamerasPage() {
     <>
       <PageHeader
         title="Cameras"
-        description={slots ? `${slots.used} of ${slots.total} camera slots in use. Each camera is read by its own thread and streamed at 12 frames per second.` : undefined}
+        description={slots ? `${slots.used} of ${slots.total} camera slots in use. Each camera streams at 12 frames per second and is analysed about 5 times a second, shared across all cameras.` : undefined}
         actions={
           <Button variant="primary" icon={Plus} onClick={() => setAdding(true)} disabled={full}>
             Add camera
@@ -123,6 +126,9 @@ export default function CamerasPage() {
                           Retry
                         </Button>
                       )}
+                      <Button size="sm" variant="ghost" icon={SlidersHorizontal} onClick={() => setTuningId(c.id)}>
+                        Detection
+                      </Button>
                       <Button size="sm" variant="ghost" icon={Pencil} onClick={() => setEditing(c)}>
                         Edit
                       </Button>
@@ -140,12 +146,13 @@ export default function CamerasPage() {
 
       <CameraDialog open={adding} onClose={() => setAdding(false)} />
       <CameraDialog open={!!editing} onClose={() => setEditing(null)} camera={editing ?? undefined} />
+      <CameraSettingsDialog camera={tuning} onClose={() => setTuningId(null)} />
       <Dialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
         size="sm"
         title={`Remove ${deleting?.name ?? ''}?`}
-        description="The stream stops and the camera leaves the Live page. Its incidents and any library video stay."
+        description="The stream stops, the camera leaves the Live page and what it learned is forgotten. Its incidents and any library video stay."
         footer={
           <>
             <Button variant="ghost" onClick={() => setDeleting(null)}>Cancel</Button>

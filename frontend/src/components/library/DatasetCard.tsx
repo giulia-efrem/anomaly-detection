@@ -59,6 +59,25 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
         <dd className="text-ink-2">{d.citation}</dd>
       </dl>
 
+      {d.credits.length > 0 && (
+        <details className="group text-[13px]">
+          <summary className="w-fit rounded-lg text-ink-2 hover:text-ink">Credits for each clip</summary>
+          <ul className="mt-2 flex flex-col gap-1">
+            {d.credits.map((c) => (
+              <li key={c.page_url} className="text-ink-2">
+                <a href={c.page_url} target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-ink hover:underline">
+                  {c.title}
+                </a>
+                <span className="text-muted">
+                  {' '}
+                  by {c.author}, {c.license}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       <div className="mt-auto flex flex-col gap-4">
         {busy && job && <JobProgress job={job} />}
         {job?.stage === 'error' && (

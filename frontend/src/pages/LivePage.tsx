@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useCameras, useIncidents, usePipelineStatus } from '../api/hooks'
+import { useCameras, useIncidents, useLiveState, usePipelineStatus } from '../api/hooks'
 import AlarmTimeline from '../components/AlarmTimeline'
 import CameraDialog from '../components/CameraDialog'
 import CameraGrid from '../components/CameraGrid'
 import IncidentQueue from '../components/IncidentQueue'
 import PipelineStatus from '../components/PipelineStatus'
+import { liveAnomalies } from '../lib/live'
 
 export default function LivePage() {
   const cameras = useCameras()
@@ -12,6 +13,7 @@ export default function LivePage() {
   const status = usePipelineStatus()
   const [focusId, setFocusId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const anomalies = liveAnomalies(cameras.data, useLiveState())
 
   const slots = status.data?.camera_slots
   const slotsLeft = slots ? slots.total - slots.used : 0
@@ -26,7 +28,8 @@ export default function LivePage() {
             isLoading={cameras.isLoading}
             error={cameras.error}
             onRetry={() => cameras.refetch()}
-            live={null /* live anomalies arrive with detection in step 3 */}
+            live={anomalies[0] ?? null}
+            alarmIds={new Set(anomalies.map((a) => a.camera_id))}
             focusId={focusId}
             onFocus={setFocusId}
             slotsLeft={slotsLeft}
