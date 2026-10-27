@@ -13,6 +13,7 @@ import type {
   NormalityJob,
   NormalitySummary,
   PipelineStatus,
+  SystemStatus,
 } from '../types'
 import { api } from './client'
 
@@ -24,6 +25,7 @@ export const keys = {
   catalog: ['catalog'] as const,
   jobs: ['jobs'] as const,
   models: ['models'] as const,
+  system: ['system'] as const,
   normality: (cameraId: string) => ['normality', cameraId] as const,
   /** Filled only by WebSocket events, never fetched. */
   live: ['live'] as const,
@@ -46,6 +48,10 @@ export const useLibrary = () =>
 export const useCatalog = () => useQuery({ queryKey: keys.catalog, queryFn: () => api.get<Catalog>('/api/library/catalog') })
 
 export const useJobs = () => useQuery({ queryKey: keys.jobs, queryFn: () => api.get<LibraryJob[]>('/api/library/jobs') })
+
+/** Status bar and health. Polled: GPU load changes without any event. */
+export const useSystem = () =>
+  useQuery({ queryKey: keys.system, queryFn: () => api.get<SystemStatus>('/api/system'), refetchInterval: 5_000 })
 
 export const useModels = () =>
   useQuery({ queryKey: keys.models, queryFn: () => api.get<ModelsStatus>('/api/models'), refetchInterval: 10_000 })

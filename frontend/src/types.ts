@@ -1,6 +1,6 @@
 // Event contract (see CLAUDE.md) plus the extra fields the backend returns.
 
-export const SUPERVISED_TYPES = ['fight', 'car_accident', 'fire_explosion', 'shooting'] as const
+export const SUPERVISED_TYPES = ['fight', 'car_accident', 'fire_explosion'] as const
 export const UNSUPERVISED_TYPES = ['unusual_object', 'unusual_motion', 'unusual_posture', 'loitering', 'crowding'] as const
 export type SupervisedType = (typeof SUPERVISED_TYPES)[number]
 export type UnsupervisedType = (typeof UNSUPERVISED_TYPES)[number]
@@ -9,6 +9,8 @@ export type ThresholdKey = SupervisedType | 'unsupervised'
 export type Method = 'supervised' | 'unsupervised'
 export type RaisedBy = Method | 'both'
 export type IncidentStatus = 'needs_review' | 'confirmed' | 'false_alarm'
+/** critical: a supervised class; warning: an unsupervised alert. */
+export type Severity = 'critical' | 'warning'
 
 export interface MethodScores {
   supervised: number | null
@@ -34,10 +36,22 @@ export interface Incident {
   clip_url: string | null
   status: IncidentStatus
   // Not in the contract
+  severity: Severity
   thumbnail_url: string | null
-  /** Scene normality reason when that model contributed. */
+  /** Unsupervised reason when that model contributed. */
   reason: UnsupervisedType | null
-  details: { class_scores?: Partial<Record<SupervisedType, number>>; keys?: string[]; clip_seconds?: number }
+  details: IncidentDetails
+}
+
+export interface IncidentDetails {
+  class_scores?: Partial<Record<SupervisedType, number>>
+  keys?: string[]
+  reasons?: (string | null)[]
+  clip_seconds?: number
+  alert_at?: string
+  /** Scores around the alert: [seconds from the alert, supervised score of `class`, unsupervised score]. */
+  series?: { class: SupervisedType; t0: number; points: [number, number, number][] }
+  detections?: { label: string; track_id: number | null; conf: number; source: 'tracker' | 'model' }[]
 }
 
 export type SourceType = 'rtsp' | 'webcam' | 'file'
@@ -79,6 +93,8 @@ export interface CameraSettings {
 /** What the pipeline sees on one camera right now ("camera.live", about once a second). */
 export interface CameraLive {
   camera_id: string
+  /** Capture time of the analysed frame, seconds since the epoch. */
+  ts: number
   people_count: number
   scores: Record<SupervisedType, number>
   unsupervised: { score: number; reason: UnsupervisedType | null; text: string | null }
@@ -138,6 +154,14 @@ export interface ModelInfo {
   device: string | null
   vram_mb: number | null
   error: string | null
+}
+
+export interface SystemStatus {
+  cameras: { online: number; total: number }
+  gpu: { name: string; util_pct: number; used_mb: number; total_mb: number } | null
+  models: { loaded: number; total: number; ready: boolean }
+  analysis_fps: number | null
+  issues: string[]
 }
 
 export interface ModelsStatus {

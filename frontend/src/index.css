@@ -1,46 +1,37 @@
 @import "tailwindcss";
 
+/*
+ * Operator console theme. Surfaces separate by 1px lines, never by shadows.
+ * Red, amber and green are status colours only; the supervised and
+ * unsupervised colours appear only in score bars and charts.
+ */
 @theme {
-  --color-page: #0c141f;
-  --color-header: #0f1925;
-  --color-panel: #111b29;
-  --color-card: #16233a;
-  --color-raised: #1b2a3f; /* hover and selected surfaces */
-  --color-field: #0b131d; /* inputs and tracks */
-  --color-video: #0a111a;
-  --color-line: #1f2f44;
-  --color-line-strong: #24354c;
-  --color-ink: #e7eef6;
-  --color-ink-2: #c3cfdc;
-  --color-muted: #8c9db2;
-  --color-sup: #f2b04a;
-  --color-unsup: #5aa9f2;
-  --color-alarm: #ff6b6b;
-  --color-healthy: #4ed3a3;
-  --color-on-light: #0c141f; /* text on light filled controls */
+  --color-page: #0b0e12;
+  --color-panel: #12161c;
+  --color-raised: #181d24; /* hover, selected rows, controls */
+  --color-field: #0e1217; /* inputs, bar tracks */
+  --color-video: #050608; /* video wall background */
+  --color-line: #232a33;
+  --color-ink: #e6e9ed;
+  --color-ink-2: #a3acb8;
+  --color-muted: #6b7480;
+  --color-accent: #4c8dff; /* selection and focus */
+  --color-crit: #e5484d;
+  --color-warn: #e2a336;
+  --color-ok: #3db37a;
+  --color-sup: #c9a25b;
+  --color-unsup: #6e9fd6;
+  --color-on-accent: #ffffff;
 
-  --font-sans: "Barlow", system-ui, sans-serif;
-  --font-cond: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
-  --animate-toast-in: toast-in 160ms ease-out;
-}
-
-@keyframes shimmer {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
+  /* rounded = panels, rounded-md/lg = controls, rounded-sm = badges and video */
+  --radius-sm: 2px;
+  --radius: 4px;
+  --radius-md: 3px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
 }
 
 @layer base {
@@ -51,13 +42,12 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
     background: var(--color-page);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.45;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
   }
@@ -73,46 +63,29 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-unsup);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  /* Every lucide icon: thin 1.5 stroke. */
+  svg.lucide {
+    stroke-width: 1.5px;
   }
 
   dialog::backdrop {
-    background: rgba(4, 8, 13, 0.72);
+    background: rgba(0, 0, 0, 0.6);
   }
-}
-
-/* Slow red glow on the tile that shows a live anomaly. */
-@keyframes live-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.15);
-  }
-  50% {
-    box-shadow: 0 0 22px 2px rgba(255, 107, 107, 0.45);
-  }
-}
-
-.live-glow {
-  animation: live-glow 2.8s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-glow {
-    animation: none;
-    box-shadow: 0 0 14px 1px rgba(255, 107, 107, 0.3);
-  }
-
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
 .thin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #24354c transparent;
+  scrollbar-color: #2c343e transparent;
 }

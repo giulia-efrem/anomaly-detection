@@ -158,7 +158,7 @@ function CameraForm({ camera, videoId, onDone }: { camera?: Camera; videoId?: st
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-[#2A1E24] px-3 py-2 text-[13px] text-[#FFB0A6]">
+        <p role="alert" className="rounded-md border border-crit px-3 py-2 text-[13px] text-crit">
           {error}
         </p>
       )}

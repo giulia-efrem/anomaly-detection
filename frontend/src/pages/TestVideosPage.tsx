@@ -5,7 +5,7 @@ import AddVideo from '../components/library/AddVideo'
 import ClipBrowser from '../components/library/ClipBrowser'
 import DatasetCard from '../components/library/DatasetCard'
 import JobProgress from '../components/library/JobProgress'
-import { PageHeader, Panel } from '../ui/Panel'
+import { PageBar, Panel } from '../ui/Panel'
 import { ErrorState, Skeleton } from '../ui/States'
 import { Tabs } from '../ui/Tabs'
 import { tabPanelProps } from '../ui/tabPanelProps'
@@ -29,17 +29,11 @@ export default function TestVideosPage() {
 
   return (
     <>
-      <PageHeader
-        title="Test videos"
-        description={
-          <>
-            Public footage with fights, car crashes, fires, guns and unusual motion, plus normal scenes to learn from. Download one, play the clips, and turn
-            any clip into a virtual camera that loops like a live feed.
-            {catalog.data && ` Links and licenses checked on ${catalog.data.verified_at}.`}
-          </>
-        }
-      />
-      <div className="flex flex-col gap-4 px-6 pb-8">
+      <PageBar>
+        Public datasets and clips. Any clip can run as a virtual camera that loops like a live feed.
+        {catalog.data && <> Links and licenses checked on <span className="font-mono">{catalog.data.verified_at}</span>.</>}
+      </PageBar>
+      <div className="flex flex-col gap-4 p-4">
         <Tabs
           idBase="videos"
           label="Test videos"
@@ -54,12 +48,12 @@ export default function TestVideosPage() {
         />
 
         {otherJobs.length > 0 && (
-          <Panel className="flex flex-col gap-4 p-4" aria-label="Uploads in progress">
+          <Panel className="flex flex-col gap-3 p-3" aria-label="Uploads in progress">
             {otherJobs.map((j) => (
               <div key={j.id} className="flex flex-col gap-1">
-                <span className="text-[13px] font-semibold">{j.label}</span>
+                <span className="text-[13px] font-medium">{j.label}</span>
                 {j.stage === 'error' ? (
-                  <span role="alert" className="text-[13px] text-[#FFB0A6]">Failed: {j.error}</span>
+                  <span role="alert" className="text-[13px] text-crit">Failed: {j.error}</span>
                 ) : (
                   <JobProgress job={j} />
                 )}
@@ -72,17 +66,17 @@ export default function TestVideosPage() {
           {tab === 'datasets' &&
             (catalog.error ? (
               <Panel>
-                <ErrorState title="Couldn't load the catalog" error={catalog.error} onRetry={() => catalog.refetch()} />
+                <ErrorState title="Catalog could not be loaded" error={catalog.error} onRetry={() => catalog.refetch()} />
               </Panel>
             ) : catalog.isLoading || !catalog.data ? (
               <div className="grid gap-4 lg:grid-cols-2">
                 {Array.from({ length: 4 }, (_, i) => (
-                  <Skeleton key={i} className="h-[380px] rounded-xl" />
+                  <Skeleton key={i} className="h-[320px]" />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2 lg:grid-cols-2">
                   {catalog.data.datasets.map((d) => (
                     <DatasetCard
                       key={d.id}
@@ -96,7 +90,7 @@ export default function TestVideosPage() {
                   ))}
                 </div>
                 {catalog.data.excluded.length > 0 && (
-                  <p className="text-[13px] text-muted">
+                  <p className="text-[12px] text-muted">
                     Left out:{' '}
                     {catalog.data.excluded.map((x) => (
                       <span key={x.name}>

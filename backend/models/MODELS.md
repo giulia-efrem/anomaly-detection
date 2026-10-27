@@ -1,6 +1,6 @@
 # Models
 
-Every model Veghe runs, where it comes from, its license, and the input it expects.
+Every model the dashboard runs, where it comes from, its license, and the input it expects.
 Links, licenses and files were checked on 2026-10-27. Weights are **not** in the
 repository; they are downloaded into `data/models/` (gitignored):
 
@@ -27,15 +27,14 @@ Ultralytics classes.
 | `fight-x3d` | X3D-M fine-tuned on RWF-2000 | fight | MIT | 12 MB |
 | `crash-r3d18` | 3D ResNet-18 crash detector | car_accident | MIT | 133 MB |
 | `fire-yolov8n` | YOLOv8n fire and smoke, D-Fire | fire_explosion | AGPL-3.0 | 6 MB |
-| `threat-yolov8n` | YOLOv8n threat detector | shooting | MIT (weights); trained with AGPL-3.0 Ultralytics | 6 MB |
 
 **License note.** Ultralytics (the library and the YOLO11 weights) is AGPL-3.0, as
 is the fire model. Using them in a public, open-source thesis project is fine; a
 closed commercial product would need an Ultralytics enterprise license or other
 detectors.
 
-Memory measured on the RTX 4050 Laptop (6 GB): all six models together take about
-210 MB of allocated VRAM, and the whole process about 1.2 GB on the GPU with
+Memory measured on the RTX 4050 Laptop (6 GB): all five models together take about
+200 MB of allocated VRAM, and the whole process about 1.1 GB on the GPU with
 cuDNN workspaces. That leaves plenty of room for the thesis model.
 
 ## Plugin interface
@@ -112,25 +111,6 @@ probability per class over all plugins.
   dashcam and 0.82 for a moment on the pistol range. Default threshold 0.6 with the
   2 s rule.
 
-### Shooting: YOLOv8n threat detector
-
-- Source: https://huggingface.co/Subh775/Threat-Detection-YOLOv8n, file
-  `weights/best.pt` (commit `c6d6fa4`). Classes: Gun, explosion, grenade, knife.
-  Test mAP50 0.81 (gun 0.93).
-- Input: any BGR frame, letterboxed to 640.
-- Runs every 0.6 s while a person is in view.
-- Score: a gun only counts when a person holds it (its centre inside the person's box
-  grown by 30 %) and it is not the person's own box (IoU under 0.5; the model sometimes
-  boxes a whole person as "Gun"), or in a close-up covering 5 % of the image where only
-  a hand is visible. Then `mean gun confidence x min(1, runs with a gun / 3)` over the
-  last 5 runs, plus up to 0.2 when the people around it suddenly move faster. Default
-  threshold 0.5: this model's confidence on real guns is mostly 0.4 to 0.55.
-- The "explosion" class is not used: it fired at 0.54 on a quiet street and stayed
-  at 0 on the real fireball.
-- **Our check**: 0.83 to 0.90 on the pistol range close-ups, 0.4 to 0.55 on the handheld
-  range video. On the office CCTV robbery the handgun is small and dark and is not
-  detected. Gun detection on real surveillance footage is the weakest part.
-
 ### Not used: VadCLIP
 
 https://github.com/nwpu-zxr/VadCLIP (Apache-2.0) publishes its XD-Violence
@@ -180,8 +160,8 @@ fight during learning does not become "normal".
 RTX 4050 Laptop on AC power, Balanced plan (the GPU stays at about 12 W, P3): YOLO11s
 on 7 frames 125 ms at 640 px, pose 93 ms, X3D-M about 50 ms per camera, r3d18 about
 60 ms per camera. To fit 8 cameras, detection and pose run at 512 px, pose on every
-third frame, the threat detector every 0.6 s and the clip models every 2 s in their
-own thread (so they never stall tracking). With the 8 demo cameras the pipeline then
+third frame and the clip models every 2 s in their own thread (so they never stall
+tracking). With 7 to 8 demo cameras the pipeline then
 analyses about 4 frames per second per camera; it drops to 1 to 1.5 while another
 program uses the GPU. "Best performance" in Windows power mode should help.
 
@@ -192,12 +172,11 @@ program uses the GPU. "Best performance" in Windows power mode should help.
 | Cafeteria, Street corner | fight | Raised on the fight part of each reel (fight model 1.00) |
 | Road cameras | car_accident | Dashcam car cutting in (1.00) and the Tonghua CCTV collision (0.95) |
 | Fire watch | fire_explosion | Bus fire, gas cylinder blast, balloon fireball, riot car fire |
-| Shooting ranges and office | shooting | Rifle and pistols at the range (0.71 to 0.86); the robbery handgun was not detected |
 | Pedestrian walkway | unusual_object | "Truck on a camera where trucks were never seen" (a utility cart), "Bicycle ..." |
 | Campus avenue | unusual_object | "Handbag in a part of the image where handbags were never seen" (a bag left on the grass) |
 | Office | unusual_posture | "Person lying or bent low, unlike the poses learned" during the falls |
 
-False alarms in the same run: fight on the shooting range (people standing close
-in a row) and on the fire scenes (firefighters), car_accident and shooting on the
+False alarms in the same run: fight on people standing close together in a row and
+on the fire scenes (firefighters), car_accident on the
 handheld fire footage, a "suitcase" misdetection in the office, and fire on a red
 bag in the avenue before the flicker and glow check was added.
