@@ -67,7 +67,7 @@ probability per class over all plugins.
 - Input: 16 RGB frames, 224 x 224, normalised with mean 0.45 and std 0.225, shape
   (B, 3, 16, 224, 224). The head ends in a softmax; index 1 is "violent".
 - Runs when two or more people are within 1.5 body heights of each other, on a
-  sliding window every 1.6 s.
+  sliding window every 2 s.
 - **Our check** on the Surveillance Camera Fight Dataset (300 clips the model never
   saw, `scripts/evaluate_clip_models.py fight fight-surv`): AUC 0.963; at
   threshold 0.6, recall 0.77 with 2 % false positives. Default threshold 0.6.
@@ -99,7 +99,10 @@ probability per class over all plugins.
 - Input: any BGR frame, letterboxed to 640 by Ultralytics.
 - Runs once per second per camera.
 - Score: the most confident fire box; smoke counts at 0.85 of its confidence; boxes
-  covering more than half the image are dropped (haze, glare, grey sky).
+  covering more than half the image are dropped (haze, glare, grey sky). A fire box
+  must flicker (mean grey-level change of at least 8 between frames 0.2 s apart) and
+  glow (at least 25 % of its pixels with brightness 220 or more), otherwise it counts
+  at half confidence: real fire boxes measured 32 to 76 % bright pixels, a red bag 19 %.
 - Explosion: a fire or smoke region that suddenly covers at least 6 % of the image
   and three times more than a few seconds earlier, together with a jump in
   brightness (+25 grey levels) or motion. It lifts the score to at least
@@ -115,17 +118,18 @@ probability per class over all plugins.
   `weights/best.pt` (commit `c6d6fa4`). Classes: Gun, explosion, grenade, knife.
   Test mAP50 0.81 (gun 0.93).
 - Input: any BGR frame, letterboxed to 640.
-- Runs about 2.5 times a second while a person is in view.
-- Score: a gun only counts when it is small and held by a person (its centre inside
-  the person's box grown by 30 %, area at most 30 % of the person's box); the model
-  sometimes boxes a whole person as "Gun". Then
-  `mean gun confidence x min(1, frames seen / 3)` over the last 6 runs, plus up
-  to 0.2 when the people around it suddenly move faster.
+- Runs every 0.6 s while a person is in view.
+- Score: a gun only counts when a person holds it (its centre inside the person's box
+  grown by 30 %) and it is not the person's own box (IoU under 0.5; the model sometimes
+  boxes a whole person as "Gun"), or in a close-up covering 5 % of the image where only
+  a hand is visible. Then `mean gun confidence x min(1, runs with a gun / 3)` over the
+  last 5 runs, plus up to 0.2 when the people around it suddenly move faster. Default
+  threshold 0.5: this model's confidence on real guns is mostly 0.4 to 0.55.
 - The "explosion" class is not used: it fired at 0.54 on a quiet street and stayed
   at 0 on the real fireball.
-- **Our check**: 0.87 on the pistol range close-ups. On the office CCTV robbery the
-  handgun is small and dark and is not detected (0.46 at best, on a whole-person
-  box). Gun detection on real surveillance footage is the weakest part.
+- **Our check**: 0.83 to 0.90 on the pistol range close-ups, 0.4 to 0.55 on the handheld
+  range video. On the office CCTV robbery the handgun is small and dark and is not
+  detected. Gun detection on real surveillance footage is the weakest part.
 
 ### Not used: VadCLIP
 
@@ -173,8 +177,27 @@ fight during learning does not become "normal".
 
 ## Speed on this laptop
 
-RTX 4050 Laptop on AC power, Balanced plan (the GPU runs at about 12 W): YOLO11s
-on 7 frames 125 ms, pose 93 ms, X3D-M about 50 ms per camera, r3d18 about 60 ms per
-camera. With the 8 demo cameras the main loop reaches about 2 to 3.5 analysed
-frames per second per camera, below the 5 fps target; the clip models run in their
-own thread so they cannot stall tracking. Fewer cameras, or a desktop GPU, reach 5 fps.
+RTX 4050 Laptop on AC power, Balanced plan (the GPU stays at about 12 W, P3): YOLO11s
+on 7 frames 125 ms at 640 px, pose 93 ms, X3D-M about 50 ms per camera, r3d18 about
+60 ms per camera. To fit 8 cameras, detection and pose run at 512 px, pose on every
+third frame, the threat detector every 0.6 s and the clip models every 2 s in their
+own thread (so they never stall tracking). With the 8 demo cameras the pipeline then
+analyses about 4 frames per second per camera; it drops to 1 to 1.5 while another
+program uses the GPU. "Best performance" in Windows power mode should help.
+
+## Alerts seen in the end-to-end run (demo cameras, 2026-10-27)
+
+| Camera | Class | What happened |
+| --- | --- | --- |
+| Cafeteria, Street corner | fight | Raised on the fight part of each reel (fight model 1.00) |
+| Road cameras | car_accident | Dashcam car cutting in (1.00) and the Tonghua CCTV collision (0.95) |
+| Fire watch | fire_explosion | Bus fire, gas cylinder blast, balloon fireball, riot car fire |
+| Shooting ranges and office | shooting | Rifle and pistols at the range (0.71 to 0.86); the robbery handgun was not detected |
+| Pedestrian walkway | unusual_object | "Truck on a camera where trucks were never seen" (a utility cart), "Bicycle ..." |
+| Campus avenue | unusual_object | "Handbag in a part of the image where handbags were never seen" (a bag left on the grass) |
+| Office | unusual_posture | "Person lying or bent low, unlike the poses learned" during the falls |
+
+False alarms in the same run: fight on the shooting range (people standing close
+in a row) and on the fire scenes (firefighters), car_accident and shooting on the
+handheld fire footage, a "suitcase" misdetection in the office, and fire on a red
+bag in the avenue before the flicker and glow check was added.

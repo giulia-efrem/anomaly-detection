@@ -182,6 +182,11 @@ class AlertEngine:
             if f and merging:
                 inc["reason"] = f.reason
                 inc["caption"] = f"{inc['caption']}. Scene: {f.text}"
+            elif f and f.reason not in inc["details"].setdefault("reasons", [inc["reason"]]):
+                # A new kind of rarity while the incident is open (a fall after an odd object): say so.
+                inc["details"]["reasons"].append(f.reason)
+                inc["caption"] = f"{inc['caption']}. Then: {f.text}"
+                merging = True  # push the change right away"
         else:
             if inc["type"] not in SUPERVISED_CLASSES or sup[key] > (inc["scores"]["supervised"] or 0):
                 if inc["type"] not in SUPERVISED_CLASSES:

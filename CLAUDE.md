@@ -26,8 +26,9 @@ Product name: **Veghe**. Public repository: https://github.com/giulia-efrem/anom
   no 3.11/3.12; created from the user's miniconda, nothing installed globally).
 - PyTorch 2.14.1+cu126, Ultralytics 8.4, PyTorchVideo 0.1.5 (installed with `--no-deps`, then
   fvcore). Keep VRAM use under ~5 GB; all models together use about 1.2 GB.
-- The GPU runs at about 12 W on the Balanced plan: with 8 cameras the pipeline analyses
-  2 to 3.5 frames per second per camera instead of 5.
+- The GPU stays at about 12 W on the Balanced plan: with 8 cameras the pipeline analyses
+  about 4 frames per second per camera (1 to 1.5 while another program uses the GPU).
+  Stage timings: `GET /api/status` → `pipeline.stage_ms`.
 
 ## How to run
 
@@ -66,8 +67,8 @@ camera source ──> CameraWorker thread (one per camera, app/cameras.py)
      GET /api/cameras/{id}/stream            Pipeline thread (app/pipeline.py), ~5 fps per camera
      (?overlay=1 draws the analysis)          1. YOLO11s detection, batched over cameras
                                               2. ByteTrack per camera: ids, speed, age, class
-                                              3. YOLO11n pose (every 2nd frame, people only)
-                                              4. plugins, gated: threat (people, 2.5/s), fire (1/s)
+                                              3. YOLO11n pose (every 3rd frame, people only)
+                                              4. plugins, gated: threat (people, every 0.6 s), fire (1/s)
                                                  └─ fight / crash windows → ClipWorker thread (16 frames)
                                               5. NormalityModel per camera: learn or score
                                               6. AlertEngine (app/alerts.py) → incidents, clips, WebSocket
