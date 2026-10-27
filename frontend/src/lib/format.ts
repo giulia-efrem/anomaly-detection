@@ -1,22 +1,14 @@
-import type { Camera, IncidentStatus, IncidentType, RaisedBy } from '../types'
+import type { Camera, IncidentType, RaisedBy } from '../types'
 import { TYPE_LABELS } from './classes'
-
-export const NA = 'n/a'
 
 export function typeLabel(type: IncidentType): string {
   return TYPE_LABELS[type] ?? type
 }
 
 export const RAISED_BY_LABELS: Record<RaisedBy, string> = {
-  both: 'Both',
-  supervised: 'Supervised',
-  unsupervised: 'Unsupervised',
-}
-
-export const STATUS_LABELS: Record<IncidentStatus, string> = {
-  needs_review: 'Open',
-  confirmed: 'Confirmed',
-  false_alarm: 'False alarm',
+  both: 'Both models',
+  supervised: 'Pretrained model only',
+  unsupervised: 'Scene normality only',
 }
 
 /** "2026-10-25T11:39:00" -> "11:39:00", without timezone conversion. */
@@ -24,24 +16,26 @@ export function clockTime(iso: string): string {
   return iso.slice(11, 19)
 }
 
-/** "2026-10-25T11:39:00" -> "2026-10-25 11:39:00" */
-export function dateTime(iso: string): string {
-  return `${iso.slice(0, 10)} ${iso.slice(11, 19)}`
+/** "2026-10-25T11:39:00" -> "Sun 25 Oct, 11:39" */
+export function dayAndTime(iso: string): string {
+  const d = new Date(iso)
+  return `${formatDay(d)}, ${iso.slice(11, 16)}`
 }
 
-/** Two decimals, or n/a when the value does not exist. */
-export function score(value: number | null | undefined): string {
-  return value === null || value === undefined ? NA : value.toFixed(2)
+export function score(value: number): string {
+  return value.toFixed(2)
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export function formatClock(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
-export function formatDate(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+export function formatDay(d: Date): string {
+  return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`
 }
 
 export function formatBytes(bytes: number | null | undefined): string {
@@ -57,21 +51,28 @@ export function formatDuration(seconds: number | null | undefined): string {
   return `${Math.floor(s / 60)}:${pad(s % 60)}`
 }
 
-/** Plain-text model states for a camera, e.g. "Sup on · Unsup learning 40%". */
-export function supervisedState(camera: Camera): string {
-  return camera.supervised === 'on' ? 'on' : 'off'
+export interface ChipState {
+  label: string
+  active: boolean
 }
 
-export function unsupervisedState(camera: Camera, progress?: number | null): string {
+export function supervisedChip(camera: Camera): ChipState {
+  return camera.supervised === 'on'
+    ? { label: 'Pretrained on', active: true }
+    : { label: 'Pretrained off', active: false }
+}
+
+/** `progress` overrides the camera's stored value with the live one. */
+export function unsupervisedChip(camera: Camera, progress?: number | null): ChipState {
   switch (camera.unsupervised) {
     case 'ready':
-      return 'ready'
+      return { label: 'Scene model ready', active: true }
     case 'collecting':
-      return 'waiting for video'
+      return { label: 'Collecting footage', active: false }
     case 'learning':
-      return `learning ${Math.floor((progress ?? camera.learning_progress ?? 0) * 100)}%`
+      return { label: `Learning ${Math.floor((progress ?? camera.learning_progress ?? 0) * 100)}%`, active: false }
     case 'off':
-      return 'off'
+      return { label: 'Scene model off', active: false }
   }
 }
 

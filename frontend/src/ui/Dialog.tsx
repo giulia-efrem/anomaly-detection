@@ -36,21 +36,24 @@ export function Dialog({ open, onClose, title, description, children, footer, si
         onClose()
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={cx('m-auto w-[calc(100%-32px)] rounded border border-line bg-panel p-0 text-ink', WIDTHS[size])}
+      className={cx(
+        'm-auto w-[calc(100%-32px)] rounded-xl bg-panel p-0 text-ink shadow-[0_24px_64px_rgba(0,0,0,0.5)]',
+        WIDTHS[size],
+      )}
     >
       {open && (
         <div className="flex max-h-[calc(100vh-64px)] flex-col">
-          <div className="flex items-start justify-between gap-4 border-b border-line px-4 py-3">
+          <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4">
             <div className="min-w-0">
-              <h2 id={titleId} className="text-[14px] font-semibold">
+              <h2 id={titleId} className="text-[18px] leading-6 font-semibold">
                 {title}
               </h2>
-              {description && <div className="mt-0.5 text-[12px] text-muted">{description}</div>}
+              {description && <div className="mt-1 text-[13px] text-muted">{description}</div>}
             </div>
-            <Button variant="ghost" size="sm" iconOnly icon={X} aria-label="Close" onClick={onClose} />
+            <Button variant="ghost" size="sm" iconOnly icon={X} aria-label="Close" onClick={onClose} className="-mt-1 -mr-2" />
           </div>
-          {children && <div className="thin-scroll overflow-y-auto p-4">{children}</div>}
-          {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-3">{footer}</div>}
+          {children && <div className="thin-scroll overflow-y-auto px-6 pb-6">{children}</div>}
+          {footer && <div className="flex flex-wrap justify-end gap-2 bg-[#0F1825] px-6 py-4">{footer}</div>}
         </div>
       )}
     </dialog>

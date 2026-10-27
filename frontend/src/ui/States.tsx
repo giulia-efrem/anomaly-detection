@@ -1,27 +1,31 @@
-import { RefreshCw } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { RefreshCw, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from './Button'
 import { cx } from './cx'
 
-/** Placeholder block while data loads. Static: nothing pulses. */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cx('rounded-sm bg-raised', className)} />
+  return <div aria-hidden="true" className={cx('animate-shimmer rounded-lg bg-[#1A2840]', className)} />
 }
 
 interface EmptyStateProps {
+  icon: LucideIcon
   title: string
   description?: ReactNode
   action?: ReactNode
   className?: string
 }
 
-/** Says what is missing and what to do next. Plain text, no illustration. */
-export function EmptyState({ title, description, action, className }: EmptyStateProps) {
+/** Says what is missing and what to do next. */
+export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cx('flex flex-col items-start gap-1 px-4 py-6', className)}>
-      <p className="text-[13px] text-ink-2">{title}</p>
-      {description && <p className="max-w-[60ch] text-[12px] text-muted">{description}</p>}
-      {action && <div className="mt-2 flex flex-wrap gap-2">{action}</div>}
+    <div className={cx('flex flex-col items-center gap-2 px-6 py-10 text-center', className)}>
+      <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-raised text-ink-2">
+        <Icon size={22} aria-hidden="true" />
+      </span>
+      <p className="text-[15px] font-semibold">{title}</p>
+      {description && <p className="max-w-[44ch] text-[13px] text-muted">{description}</p>}
+      {action && <div className="mt-2 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
   )
 }
@@ -37,14 +41,17 @@ export function ErrorState({
   onRetry?: () => void
   className?: string
 }) {
-  const message = error instanceof Error ? error.message : 'Request failed.'
+  const message = error instanceof Error ? error.message : 'Something went wrong.'
   return (
-    <div role="alert" className={cx('flex flex-col items-start gap-1 px-4 py-6', className)}>
-      <p className="text-[13px] text-ink">{title}</p>
-      <p className="max-w-[60ch] text-[12px] text-muted">{message}</p>
+    <div role="alert" className={cx('flex flex-col items-center gap-2 px-6 py-10 text-center', className)}>
+      <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-[#2A1E24] text-[#FFB0A6]">
+        <TriangleAlert size={22} aria-hidden="true" />
+      </span>
+      <p className="text-[15px] font-semibold">{title}</p>
+      <p className="max-w-[48ch] text-[13px] text-muted">{message}</p>
       {onRetry && (
         <Button size="sm" icon={RefreshCw} onClick={onRetry} className="mt-2">
-          Retry
+          Try again
         </Button>
       )}
     </div>
@@ -60,9 +67,12 @@ export function ProgressBar({ value, label, className }: { value: number | null;
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={pct ?? undefined}
-      className={cx('relative h-1 overflow-hidden rounded-sm bg-field', className)}
+      className={cx('relative h-1.5 overflow-hidden rounded-full bg-field', className)}
     >
-      {pct !== null && <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${pct}%` }} />}
+      <div
+        className={cx('absolute inset-y-0 left-0 rounded-full bg-unsup transition-[width] duration-300', pct === null && 'w-1/3 animate-shimmer')}
+        style={pct === null ? undefined : { width: `${pct}%` }}
+      />
     </div>
   )
 }

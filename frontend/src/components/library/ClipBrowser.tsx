@@ -1,4 +1,4 @@
-import { Cctv, Play, Trash2 } from 'lucide-react'
+import { Cctv, Film, Play, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useDeleteVideo, useLibrary } from '../../api/hooks'
 import { formatDuration } from '../../lib/format'
@@ -35,7 +35,7 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
   if (library.error) {
     return (
       <Panel>
-        <ErrorState title="Library could not be loaded" error={library.error} onRetry={() => library.refetch()} />
+        <ErrorState title="Couldn't load the library" error={library.error} onRetry={() => library.refetch()} />
       </Panel>
     )
   }
@@ -54,7 +54,7 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
     const v = deleting
     remove.mutate(v.id, {
       onSuccess: () => toast({ title: `${v.title} deleted`, tone: 'success' }),
-      onError: (err) => toast({ title: `${v.title}: not deleted`, description: err.message, tone: 'error' }),
+      onError: (err) => toast({ title: `Couldn't delete ${v.title}`, description: err.message, tone: 'error' }),
       onSettled: () => setDeleting(null),
     })
   }
@@ -62,8 +62,8 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex w-full flex-col gap-1 sm:w-64">
-          <span className="text-[12px] font-medium text-ink-2">Dataset</span>
+        <label className="flex w-full flex-col gap-2 sm:w-64">
+          <span className="text-[13px] font-semibold text-ink-2">Dataset</span>
           <Select value={dataset} onChange={(e) => { onDatasetChange(e.target.value); setShown(PAGE) }}>
             <option value="">All datasets</option>
             {datasets.map(([id, name]) => (
@@ -71,8 +71,8 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
             ))}
           </Select>
         </label>
-        <label className="flex w-full flex-col gap-1 sm:w-52">
-          <span className="text-[12px] font-medium text-ink-2">Anomaly type</span>
+        <label className="flex w-full flex-col gap-2 sm:w-52">
+          <span className="text-[13px] font-semibold text-ink-2">Anomaly type</span>
           <Select value={type} onChange={(e) => { setType(e.target.value); setShown(PAGE) }}>
             <option value="">All types</option>
             {types.map((t) => (
@@ -81,28 +81,30 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
           </Select>
         </label>
         {!library.isLoading && (
-          <p className="pb-1.5 font-mono text-[12px] text-muted" aria-live="polite">
+          <p className="pb-2 text-[13px] text-muted" aria-live="polite">
             {filtered.length} {filtered.length === 1 ? 'clip' : 'clips'}
           </p>
         )}
       </div>
 
       {library.isLoading ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2" aria-busy="true">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4" aria-busy="true">
           {Array.from({ length: 8 }, (_, i) => (
-            <Skeleton key={i} className="h-[220px]" />
+            <Skeleton key={i} className="h-[248px] rounded-xl" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <Panel>
           {all.length === 0 ? (
             <EmptyState
+              icon={Film}
               title="The library is empty"
-              description="Download a dataset or add a video. Clips are converted to H.264 with a thumbnail."
-              action={<Button size="sm" onClick={onGoToDatasets}>Datasets</Button>}
+              description="Download a dataset or add your own video. Clips are converted to H.264 and get a thumbnail."
+              action={<Button size="sm" variant="primary" onClick={onGoToDatasets}>Browse datasets</Button>}
             />
           ) : (
             <EmptyState
+              icon={Film}
               title="No clips match these filters"
               action={<Button size="sm" onClick={() => { onDatasetChange(''); setType('') }}>Clear filters</Button>}
             />
@@ -110,7 +112,7 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
         </Panel>
       ) : (
         <>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
             {visible.map((v) => (
               <li key={v.id}>
                 <ClipCard
@@ -164,7 +166,7 @@ export default function ClipBrowser({ typeLabels, dataset, onDatasetChange, onUs
         footer={
           <>
             <Button variant="ghost" onClick={() => setDeleting(null)}>Cancel</Button>
-            <Button variant="danger" icon={Trash2} loading={remove.isPending} onClick={confirmDelete}>Delete</Button>
+            <Button variant="primary" icon={Trash2} loading={remove.isPending} onClick={confirmDelete}>Delete</Button>
           </>
         }
       />
@@ -188,30 +190,32 @@ function ClipCard({ video: v, typeLabels, canUse, onPlay, onUse, onDelete }: Cli
         {v.thumbnail_url && (
           <img src={v.thumbnail_url} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
         )}
-        <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-          <Play size={16} aria-hidden="true" />
+        <span className="absolute inset-0 flex items-center justify-center bg-[rgba(5,9,15,0.35)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-on-light">
+            <Play size={18} aria-hidden="true" />
+          </span>
         </span>
-        <span className="absolute right-1 bottom-1 rounded-sm bg-black/70 px-1 font-mono text-[12px] text-ink">
+        <span className="absolute right-2 bottom-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-cond text-[12px] text-ink">
           {formatDuration(v.duration_s)}
         </span>
         {v.origin === 'reel' && (
-          <span className="absolute top-1 left-1 rounded-sm bg-black/70 px-1 text-[12px] text-ink">
+          <span className="absolute top-2 left-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-cond text-[12px] text-ink">
             Joined reel
           </span>
         )}
       </button>
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="min-w-0">
-          <h3 className="truncate text-[13px] font-medium" title={v.title}>{v.title}</h3>
+          <h3 className="truncate text-[14px] font-semibold" title={v.title}>{v.title}</h3>
           <p className="truncate text-[12px] text-muted">{v.dataset_name}</p>
         </div>
         <div className="flex flex-wrap gap-1">
           {v.anomaly_types.map((t) => (
             <Chip key={t} className={t === 'normal' ? 'text-muted' : undefined}>{typeLabels[t] ?? t}</Chip>
           ))}
-          {v.used_by.length > 0 && <Chip>Camera {v.used_by.join(', ')}</Chip>}
+          {v.used_by.length > 0 && <Chip dot="var(--color-healthy)">On camera {v.used_by.join(', ')}</Chip>}
         </div>
-        <div className="mt-auto flex items-center gap-1 pt-1">
+        <div className="mt-auto flex items-center gap-1 pt-2">
           <Button size="sm" icon={Play} onClick={onPlay}>Play</Button>
           <Button size="sm" variant="ghost" icon={Cctv} onClick={onUse} disabled={!canUse} title={canUse ? undefined : 'All camera slots are in use'}>
             Use as camera

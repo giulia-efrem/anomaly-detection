@@ -36,7 +36,7 @@ export function Tabs<T extends string>({ items, value, onChange, label, idBase, 
   }
 
   return (
-    <div role="tablist" aria-label={label} className={cx('flex flex-wrap gap-4 border-b border-line', className)}>
+    <div role="tablist" aria-label={label} className={cx('flex flex-wrap gap-1 rounded-lg bg-field p-1', className)}>
       {items.map((t, i) => {
         const selected = t.id === value
         return (
@@ -54,12 +54,12 @@ export function Tabs<T extends string>({ items, value, onChange, label, idBase, 
             onClick={() => onChange(t.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cx(
-              '-mb-px inline-flex h-9 items-center gap-1.5 border-b-2 text-[13px] font-medium transition-colors',
-              selected ? 'border-accent text-ink' : 'border-transparent text-ink-2 hover:text-ink',
+              'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-semibold transition-colors',
+              selected ? 'bg-raised text-ink' : 'text-muted hover:text-ink',
             )}
           >
             {t.label}
-            {t.count !== undefined && <span className="font-mono text-[12px] text-muted">{t.count}</span>}
+            {t.count !== undefined && <span className="font-cond font-medium text-muted">{t.count}</span>}
           </button>
         )
       })}

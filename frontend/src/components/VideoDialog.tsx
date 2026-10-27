@@ -21,7 +21,7 @@ export default function VideoDialog({ open, onClose, title, description, src, fo
           autoPlay
           loop
           playsInline
-          className="aspect-video w-full rounded-md bg-video object-contain"
+          className="aspect-video w-full rounded-lg bg-video object-contain"
         />
       )}
     </Dialog>

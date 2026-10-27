@@ -64,10 +64,10 @@ function UploadCard({ typeLabels }: { typeLabels: Record<string, string> }) {
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div>
-          <h3 className="text-[14px] font-semibold">Upload video files</h3>
+          <h3 className="text-[16px] font-semibold">Upload video files</h3>
           <p className="text-[13px] text-muted">MP4, AVI, MOV, MKV and more. Converted to H.264 with a thumbnail.</p>
         </div>
         <label
@@ -75,17 +75,17 @@ function UploadCard({ typeLabels }: { typeLabels: Record<string, string> }) {
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           className={cx(
-            'flex cursor-pointer flex-col items-center justify-center gap-1 rounded border border-dashed px-4 py-8 text-center transition-colors',
+            'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-8 text-center transition-colors',
             'focus-within:ring-2 focus-within:ring-unsup',
-            dragging ? 'border-unsup bg-raised' : 'border-line hover:border-ink-2 hover:bg-raised',
+            dragging ? 'border-unsup bg-raised' : 'border-[#2C3F59] hover:border-[#3E5470] hover:bg-[#13202F]',
           )}
         >
-          <Upload size={16} className="text-ink-2" aria-hidden="true" />
-          <span className="text-[13px] font-medium">
+          <Upload size={22} className="text-ink-2" aria-hidden="true" />
+          <span className="text-[14px] font-semibold">
             {files.length ? files.map((f) => f.name).join(', ') : 'Drop videos here or choose files'}
           </span>
           <span className="text-[12px] text-muted">
-            {files.length ? `${files.length} selected` : 'Several files allowed'}
+            {files.length ? `${files.length} selected` : 'Several files at once are fine'}
           </span>
           <input
             ref={input}
@@ -132,10 +132,10 @@ function UrlCard({ typeLabels }: { typeLabels: Record<string, string> }) {
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
         <div>
-          <h3 className="text-[14px] font-semibold">Add from a link</h3>
+          <h3 className="text-[16px] font-semibold">Add from a link</h3>
           <p className="text-[13px] text-muted">A direct link to a video file, not a YouTube or streaming page.</p>
         </div>
         <Field label="Video link" error={error}>

@@ -1,5 +1,16 @@
-import { OctagonAlert, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { SUPERVISED_TYPES, type IncidentType, type Severity, type SupervisedType, type ThresholdKey } from '../types'
+import {
+  CarFront,
+  CircleHelp,
+  Clock4,
+  Flame,
+  PackageSearch,
+  PersonStanding,
+  Swords,
+  Users,
+  Wind,
+  type LucideIcon,
+} from 'lucide-react'
+import { SUPERVISED_TYPES, type IncidentType, type SupervisedType, type ThresholdKey } from '../types'
 
 export const TYPE_LABELS: Record<IncidentType, string> = {
   fight: 'Fight',
@@ -13,18 +24,37 @@ export const TYPE_LABELS: Record<IncidentType, string> = {
   other: 'Other',
 }
 
+export const TYPE_ICONS: Record<IncidentType, LucideIcon> = {
+  fight: Swords,
+  car_accident: CarFront,
+  fire_explosion: Flame,
+  unusual_object: PackageSearch,
+  unusual_motion: Wind,
+  unusual_posture: PersonStanding,
+  loitering: Clock4,
+  crowding: Users,
+  other: CircleHelp,
+}
+
+/**
+ * One hue per pretrained class and one for every scene normality reason (which also
+ * carry an icon and a label). Validated with the dataviz palette script on the
+ * timeline track (#0D1622): CVD and normal-vision separation pass for neighbours.
+ * No red: red is reserved for a live anomaly.
+ */
+export const SCENE_COLOR = '#3987e5'
+export const CLASS_COLORS: Record<SupervisedType, string> = {
+  fight: '#d95926',
+  car_accident: '#199e70',
+  fire_explosion: '#c98500',
+}
+
 export function isSupervisedType(t: string): t is SupervisedType {
   return (SUPERVISED_TYPES as readonly string[]).includes(t)
 }
 
-/** Critical for the supervised classes, warning for unsupervised alerts. */
-export function severityOf(t: IncidentType): Severity {
-  return isSupervisedType(t) ? 'critical' : 'warning'
-}
-
-export const SEVERITY: Record<Severity, { label: string; icon: LucideIcon; text: string; color: string }> = {
-  critical: { label: 'Critical', icon: OctagonAlert, text: 'text-crit', color: 'var(--color-crit)' },
-  warning: { label: 'Warning', icon: TriangleAlert, text: 'text-warn', color: 'var(--color-warn)' },
+export function typeColor(t: IncidentType): string {
+  return isSupervisedType(t) ? CLASS_COLORS[t] : SCENE_COLOR
 }
 
 /** Short model names shown next to a class. */
@@ -38,5 +68,5 @@ export const THRESHOLD_LABELS: Record<ThresholdKey, string> = {
   fight: 'Fight',
   car_accident: 'Car accident',
   fire_explosion: 'Fire or explosion',
-  unsupervised: 'Unsupervised',
+  unsupervised: 'Scene normality',
 }

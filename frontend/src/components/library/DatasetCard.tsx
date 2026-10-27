@@ -23,13 +23,13 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
 
   const start = () =>
     download.mutate(d.id, {
-      onError: (err) => toast({ title: `${d.name}: download not started`, description: err.message, tone: 'error' }),
+      onError: (err) => toast({ title: `Couldn't start ${d.name}`, description: err.message, tone: 'error' }),
     })
 
   return (
-    <Card className="flex flex-col gap-3 p-4">
+    <Card className="flex flex-col gap-4 p-6">
       <div className="flex flex-col gap-2">
-        <h3 className="text-[14px] font-semibold">{d.name}</h3>
+        <h3 className="text-[16px] leading-6 font-semibold">{d.name}</h3>
         <div className="flex flex-wrap gap-1">
           {d.anomaly_types.map((t) => (
             <Chip key={t}>{typeLabels[t] ?? t}</Chip>
@@ -38,11 +38,11 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
         </div>
       </div>
 
-      <p className="text-[13px] text-ink-2">{d.description}</p>
+      <p className="text-[14px] text-ink-2">{d.description}</p>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
         <dt className="text-muted">Size</dt>
-        <dd className="font-mono">
+        <dd className="font-cond">
           {formatBytes(d.size_bytes)}, {d.clip_count} clips
         </dd>
         <dt className="text-muted">License</dt>
@@ -61,7 +61,7 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
 
       {d.credits.length > 0 && (
         <details className="group text-[13px]">
-          <summary className="w-fit rounded-md text-ink-2 hover:text-ink">Credits for each clip</summary>
+          <summary className="w-fit rounded-lg text-ink-2 hover:text-ink">Credits for each clip</summary>
           <ul className="mt-2 flex flex-col gap-1">
             {d.credits.map((c) => (
               <li key={c.page_url} className="text-ink-2">
@@ -81,7 +81,7 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
       <div className="mt-auto flex flex-col gap-4">
         {busy && job && <JobProgress job={job} />}
         {job?.stage === 'error' && (
-          <p role="alert" className="rounded-md border border-crit px-3 py-2 text-[13px] text-crit">
+          <p role="alert" className="rounded-lg bg-[#2A1E24] px-3 py-2 text-[13px] text-[#FFB0A6]">
             Download failed: {job.error}
           </p>
         )}
@@ -90,10 +90,10 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
           {complete ? (
             <>
               <span className="mr-auto flex items-center gap-2 text-[13px] text-ink-2">
-                <CircleCheck size={16} className="text-ok" aria-hidden="true" />
+                <CircleCheck size={16} className="text-healthy" aria-hidden="true" />
                 {d.clips_imported} clips in the library
               </span>
-              <Button size="sm" icon={Film} onClick={() => onBrowse(d.id)}>
+              <Button size="sm" variant="primary" icon={Film} onClick={() => onBrowse(d.id)}>
                 Browse clips
               </Button>
             </>
@@ -112,10 +112,10 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
             href={d.source_url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-ink-2 transition-colors hover:bg-raised hover:text-ink"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-semibold text-ink-2 transition-colors hover:bg-raised hover:text-ink"
           >
             Source
-            <ExternalLink size={16} aria-hidden="true" />
+            <ExternalLink size={14} aria-hidden="true" />
           </a>
         </div>
       </div>

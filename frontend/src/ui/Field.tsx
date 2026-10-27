@@ -3,9 +3,9 @@ import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttribu
 import { cx } from './cx'
 
 const CONTROL =
-  'h-8 w-full rounded-md border border-line bg-field px-2 text-[13px] text-ink placeholder:text-muted ' +
-  'transition-colors hover:border-[#323b46] focus:border-accent focus:outline-none ' +
-  'aria-invalid:border-crit disabled:opacity-50'
+  'h-10 w-full rounded-lg bg-field px-3 text-[14px] text-ink placeholder:text-[#5F7189] ' +
+  'ring-1 ring-line ring-inset transition-shadow hover:ring-line-strong ' +
+  'focus:ring-2 focus:ring-unsup focus:outline-none aria-invalid:ring-[#FFB0A6] disabled:opacity-50'
 
 interface FieldProps {
   label: string
@@ -20,13 +20,13 @@ export function Field({ label, hint, error, children }: FieldProps) {
   const noteId = `${id}-note`
   const note = error || hint
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-[12px] font-medium text-ink-2">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-[13px] font-semibold text-ink-2">
         {label}
       </label>
       {children({ id, 'aria-describedby': note ? noteId : undefined, 'aria-invalid': error ? true : undefined })}
       {note && (
-        <p id={noteId} className={cx('text-[12px]', error ? 'text-crit' : 'text-muted')}>
+        <p id={noteId} className={cx('text-[12px]', error ? 'text-[#FFB0A6]' : 'text-muted')}>
           {note}
         </p>
       )}
@@ -41,13 +41,13 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="relative">
-      <select className={cx(CONTROL, 'appearance-none pr-8', className)} {...rest}>
+      <select className={cx(CONTROL, 'appearance-none pr-9', className)} {...rest}>
         {children}
       </select>
       <ChevronDown
         size={16}
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-muted"
+        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted"
       />
     </div>
   )

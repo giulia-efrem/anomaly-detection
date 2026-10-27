@@ -5,20 +5,21 @@ import CamerasPage from './pages/CamerasPage'
 import IncidentsPage from './pages/IncidentsPage'
 import LivePage from './pages/LivePage'
 import { ComparePage, NotFoundPage } from './pages/PlaceholderPages'
-import TestVideosPage from './pages/TestVideosPage'
 import TrainingPage from './pages/TrainingPage'
+import TestVideosPage from './pages/TestVideosPage'
 
-// `handle.title` is the top bar title and the browser tab title.
+// `handle.title` becomes the browser tab title (see Layout).
 export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
       { path: '/', element: <LivePage />, handle: { title: 'Live' } },
       { path: '/incidents', element: <IncidentsPage />, handle: { title: 'Incidents' } },
-      { path: '/cameras', element: <CamerasPage />, handle: { title: 'Cameras' } },
       { path: '/test-videos', element: <TestVideosPage />, handle: { title: 'Test videos' } },
-      { path: '/training', element: <TrainingPage />, handle: { title: 'Training' } },
+      // Behind FEATURE_COMPARE (src/features.ts), off by default.
       ...(FEATURE_COMPARE ? [{ path: '/compare', element: <ComparePage />, handle: { title: 'Compare models' } }] : []),
+      { path: '/training', element: <TrainingPage />, handle: { title: 'Training' } },
+      { path: '/cameras', element: <CamerasPage />, handle: { title: 'Cameras' } },
       { path: '*', element: <NotFoundPage />, handle: { title: 'Page not found' } },
     ],
   },
