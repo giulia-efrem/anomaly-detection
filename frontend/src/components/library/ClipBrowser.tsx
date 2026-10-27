@@ -195,11 +195,11 @@ function ClipCard({ video: v, typeLabels, canUse, onPlay, onUse, onDelete }: Cli
             <Play size={18} aria-hidden="true" />
           </span>
         </span>
-        <span className="absolute right-2 bottom-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-cond text-[12px] text-ink">
+        <span className="absolute right-2 bottom-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-mono text-[12px] text-ink">
           {formatDuration(v.duration_s)}
         </span>
         {v.origin === 'reel' && (
-          <span className="absolute top-2 left-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-cond text-[12px] text-ink">
+          <span className="absolute top-2 left-2 rounded-md bg-[rgba(5,9,15,0.8)] px-1.5 font-mono text-[12px] text-ink">
             Joined reel
           </span>
         )}

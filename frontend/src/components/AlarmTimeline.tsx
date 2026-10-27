@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
-import { CLASS_COLORS, SCENE_COLOR, TYPE_LABELS, typeColor } from '../lib/classes'
-import { RAISED_BY_LABELS } from '../lib/format'
-import { SUPERVISED_TYPES, type Camera, type Incident } from '../types'
-import { Panel, PanelHeader } from '../ui/Panel'
+import { RAISED_BY_LABELS, typeLabel } from '../lib/format'
+import type { Camera, Incident, RaisedBy } from '../types'
+import { Panel } from '../ui/Panel'
 import { ErrorState, Skeleton } from '../ui/States'
 import { Tabs } from '../ui/Tabs'
 import { tabPanelProps } from '../ui/tabPanelProps'
 
-// One colour per pretrained class; every scene normality reason shares the scene colour.
-const LEGEND: { key: string; label: string; color: string }[] = [
-  ...SUPERVISED_TYPES.map((t) => ({ key: t, label: TYPE_LABELS[t], color: CLASS_COLORS[t] })),
-  { key: 'scene', label: 'Scene normality', color: SCENE_COLOR },
-]
+// Half and half for "both", top to bottom on a thin marker.
+const MARKER_BG: Record<RaisedBy, string> = {
+  supervised: 'var(--color-sup)',
+  unsupervised: 'var(--color-unsup)',
+  both: 'linear-gradient(to bottom, var(--color-sup) 50%, var(--color-unsup) 50%)',
+}
+
+const LEGEND: RaisedBy[] = ['supervised', 'unsupervised', 'both']
 
 type WindowId = '15m' | '1h' | '24h' | '7d'
 const WINDOWS: { id: WindowId; label: string; minutes: number; phrase: string }[] = [
@@ -21,7 +23,7 @@ const WINDOWS: { id: WindowId; label: string; minutes: number; phrase: string }[
   { id: '7d', label: '7 days', minutes: 10080, phrase: 'the last 7 days' },
 ]
 
-const NAME_COL = 112
+const NAME_COL = 120
 const COL_GAP = 12
 
 function tickLabel(t: number, minutes: number): string {
@@ -50,52 +52,53 @@ interface AlarmTimelineProps {
 export default function AlarmTimeline({ cameras, incidents, isLoading, error, onRetry }: AlarmTimelineProps) {
   const [windowId, setWindowId] = useState<WindowId>('15m')
   const win = WINDOWS.find((w) => w.id === windowId)!
-  const now = useNow(15000)
+  const now = useNow(5000)
   const start = now - win.minutes * 60_000
   const span = now - start
 
   const inWindow = (incidents ?? []).filter((i) => new Date(i.ended_at).getTime() >= start)
   const totalAlarms = inWindow.reduce((n, i) => n + i.alarm_count, 0)
   const cameraCount = new Set(inWindow.map((i) => i.camera_id)).size
-  const ticks = [0, 1, 2, 3].map((k) => ({ pct: (k / 3) * 100, label: tickLabel(start + (span * k) / 3, win.minutes) }))
+  const ticks = [0, 1, 2, 3].map((k) => ({ pct: (k / 4) * 100, label: tickLabel(start + (span * k) / 4, win.minutes) }))
 
   return (
-    <Panel className="px-6 py-4">
-      <PanelHeader
-        title={`Alarms in ${win.phrase}`}
-        description={
-          isLoading ? 'Loading' : totalAlarms > 0
-            ? `${totalAlarms} ${totalAlarms === 1 ? 'alarm' : 'alarms'} on ${cameraCount} ${cameraCount === 1 ? 'camera' : 'cameras'}`
-            : 'No alarms in this window. Pick a longer window to see older incidents.'
-        }
-        actions={<Tabs items={WINDOWS} value={windowId} onChange={setWindowId} label="Time window" idBase="timeline" />}
-      />
+    <Panel className="border border-line px-4 py-3">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+        <div>
+          <h2 className="text-[16px] leading-6 font-semibold">Alarm timeline</h2>
+          <p className="text-[13px] text-muted">
+            {isLoading
+              ? 'Loading'
+              : totalAlarms > 0
+                ? `${totalAlarms} ${totalAlarms === 1 ? 'alarm' : 'alarms'} on ${cameraCount} ${cameraCount === 1 ? 'camera' : 'cameras'} in ${win.phrase}`
+                : `No alarms in ${win.phrase}`}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <ul className="flex items-center gap-3 text-[12px] text-ink-2" aria-label="Legend">
+            {LEGEND.map((by) => (
+              <li key={by} className="flex items-center gap-1.5">
+                <span className="h-3 w-1 rounded-sm" style={{ background: MARKER_BG[by] }} aria-hidden="true" />
+                {RAISED_BY_LABELS[by]}
+              </li>
+            ))}
+          </ul>
+          <Tabs items={WINDOWS} value={windowId} onChange={setWindowId} label="Time window" idBase="timeline" />
+        </div>
+      </div>
 
-      <ul className="mt-2 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-2" aria-label="Legend">
-        {LEGEND.map((l) => (
-          <li key={l.key} className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: l.color }} />
-            {l.label}
-          </li>
-        ))}
-        <li className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-[2px] bg-muted ring-[1.5px] ring-ink" />
-          Raised by both models
-        </li>
-      </ul>
-
-      <div {...tabPanelProps('timeline', windowId)}>
+      <div {...tabPanelProps('timeline', windowId)} className="mt-3">
         {error ? (
           <ErrorState title="Couldn't load alarms" error={error} onRetry={onRetry} className="py-6" />
         ) : isLoading || !cameras ? (
-          <div className="flex flex-col gap-2" aria-busy="true">
+          <div className="flex flex-col gap-1.5" aria-busy="true">
             {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-5" />
             ))}
           </div>
         ) : (
           <>
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-1.5">
               {cameras.map((c) => {
                 const rows = inWindow.filter((i) => i.camera_id === c.id)
                 return (
@@ -104,11 +107,11 @@ export default function AlarmTimeline({ cameras, incidents, isLoading, error, on
                       {c.name}
                     </span>
                     <div
-                      className="relative h-5 flex-1 overflow-hidden rounded bg-[#0D1622]"
+                      className="relative h-5 flex-1 rounded-md bg-field"
                       aria-label={`${c.name}: ${rows.length === 0 ? 'no alarms' : `${rows.length} incidents`}`}
                     >
-                      {ticks.slice(1, -1).map((t) => (
-                        <span key={t.pct} className="absolute inset-y-0 w-px bg-[#16233A]" style={{ left: `${t.pct}%` }} />
+                      {ticks.slice(1).map((t) => (
+                        <span key={t.pct} className="absolute inset-y-0 w-px bg-line" style={{ left: `${t.pct}%` }} />
                       ))}
                       {rows.map((i) => {
                         const a = Math.max(0, (new Date(i.started_at).getTime() - start) / span) * 100
@@ -116,30 +119,29 @@ export default function AlarmTimeline({ cameras, incidents, isLoading, error, on
                         return (
                           <span
                             key={i.id}
-                            title={`${TYPE_LABELS[i.type]}, ${RAISED_BY_LABELS[i.raised_by].toLowerCase()}, ${i.alarm_count} ${i.alarm_count === 1 ? 'alarm' : 'alarms'}`}
-                            className={`absolute inset-y-[3px] min-w-[5px] rounded-[2px] ${i.raised_by === 'both' ? 'ring-[1.5px] ring-ink' : ''}`}
-                            style={{ left: `${a}%`, width: `${Math.max(b - a, 0)}%`, background: typeColor(i.type) }}
+                            title={`${typeLabel(i.type)}, ${RAISED_BY_LABELS[i.raised_by].toLowerCase()}, ${i.alarm_count} ${i.alarm_count === 1 ? 'alarm' : 'alarms'}`}
+                            className="absolute inset-y-[3px] min-w-[3px] rounded-sm"
+                            style={{ left: `${a}%`, width: `${Math.max(b - a, 0)}%`, background: MARKER_BG[i.raised_by] }}
                           />
                         )
                       })}
+                      <span className="absolute -inset-y-0.5 right-0 w-px bg-ink" aria-hidden="true" />
                     </div>
                   </li>
                 )
               })}
             </ul>
-            <div className="relative mt-2 h-4 font-cond text-[12px] text-muted" style={{ marginLeft: NAME_COL + COL_GAP }}>
+            <div className="relative mt-1.5 h-4 font-mono text-[12px] text-muted" style={{ marginLeft: NAME_COL + COL_GAP }}>
               {ticks.map((t, i) => (
                 <span
                   key={t.pct}
-                  className="absolute top-0"
-                  style={{
-                    left: `${t.pct}%`,
-                    transform: i === 0 ? 'none' : i === ticks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
-                  }}
+                  className={`absolute top-0 ${i % 2 === 1 ? 'hidden sm:inline' : ''}`}
+                  style={{ left: `${t.pct}%`, transform: i === 0 ? 'none' : 'translateX(-50%)' }}
                 >
                   {t.label}
                 </span>
               ))}
+              <span className="absolute top-0 right-0 text-ink">Now</span>
             </div>
           </>
         )}

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { useCameras, useDeleteCamera, usePipelineStatus, useRestartCamera } from '../api/hooks'
 import CameraDialog from '../components/CameraDialog'
 import CameraSettingsDialog from '../components/CameraSettingsDialog'
-import { ModelChips } from '../components/CameraTile'
-import { SOURCE_LABELS } from '../lib/format'
+import { ModelDots } from '../components/CameraTile'
+import { SOURCE_LABELS, supervisedChip, unsupervisedChip } from '../lib/format'
 import type { Camera } from '../types'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
@@ -110,14 +110,17 @@ export default function CamerasPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-x-2">
                         <h2 className="text-[15px] font-semibold">{c.name}</h2>
-                        <span className="font-cond text-[13px] text-muted">{c.id}</span>
+                        <span className="font-mono text-[13px] text-muted">{c.id}</span>
                       </div>
                       <p className="truncate text-[13px] text-ink-2" title={c.source}>
                         <span className="text-muted">{SOURCE_LABELS[c.source_type]}:</span> {c.source}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         <Chip dot={s.color} active={s.active}>{s.label}</Chip>
-                        <ModelChips camera={c} />
+                        <Chip>
+                          <ModelDots camera={c} live={undefined} />
+                          {supervisedChip(c).label} · Unsupervised {unsupervisedChip(c).label.toLowerCase()}
+                        </Chip>
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-1">

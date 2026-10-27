@@ -134,10 +134,9 @@ class AlertEngine:
         if key == UNSUP:
             itype = finding.reason if finding else "other"
             caption = finding.text if finding else "Scene differs from what was learned"
-            highlight = finding.track_id if finding else None
             sup_cls = best_sup
         else:
-            itype, sup_cls, highlight = key, key, None
+            itype, sup_cls = key, key
             caption = self.pipeline.class_note(st, key) or f"{key.replace('_', ' ').capitalize()} model above threshold"
         inc_id = f"inc-{time.strftime('%Y%m%d-%H%M%S', time.localtime(ts))}-{uuid.uuid4().hex[:4]}"
         incident = {
@@ -164,7 +163,7 @@ class AlertEngine:
         ep.incident_id = inc_id
         ep.counted_second = int(ts)
         self.open[inc_id] = Open(incident, {key}, ts, ts)
-        self._thumbnail(inc_id, frame.image, st, highlight, incident["caption"])
+        self._thumbnail(inc_id, frame.image, st, key, incident["caption"])
         db.save_incident(incident)
         bus.publish({"type": "incident.created", "incident": db.get_incident(inc_id)})
         log.info("incident %s on %s: %s (%s)", inc_id, st.camera_id, itype, incident["raised_by"])
@@ -235,9 +234,9 @@ class AlertEngine:
 
     # --- media ---------------------------------------------------------------
 
-    def _thumbnail(self, inc_id: str, image: Any, st: CameraState, highlight: int | None, caption: str) -> None:
+    def _thumbnail(self, inc_id: str, image: Any, st: CameraState, key: str, caption: str) -> None:
         try:
-            img = overlay.draw(image, st.objects, st.boxes, highlight, caption)
+            img = overlay.draw(image, st.objects, st.boxes, caption=caption, **overlay.alarm_marks([key], st))
             cv2.imwrite(str(config.INCIDENTS_DIR / f"{inc_id}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
         except Exception:
             log.exception("thumbnail for %s failed", inc_id)

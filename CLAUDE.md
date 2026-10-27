@@ -17,7 +17,8 @@ Public repository: https://github.com/giulia-efrem/anomaly-detection
 - Step 1: Live page with mock data. Done.
 - Step 2: backend, real video (MJPEG), Test videos page, API-driven frontend. Done.
 - Step 3: pretrained detectors, unsupervised model, live pipeline, alerts, incidents with clips. Done.
-- Design v1: operator-console redesign, three supervised classes. Done (tag `design-pro-v1`).
+- Design v1: plain operator-console redesign (tag `design-pro-v1`), later reverted.
+- Design v3: the step 3 layout refined (top navigation, focus tile, alarm panel, timeline). Done (tag `design-v3`).
 - Next: the thesis model as a plugin; Compare models page (behind `FEATURE_COMPARE`).
 
 ## Machine
@@ -97,12 +98,18 @@ camera source ──> CameraWorker thread (one per camera, app/cameras.py)
   host, so the frontend loads each stream from its own host name
   `http://<camera-id>.localhost:8000/...`. See `streamSrc` in `frontend/src/api/client.ts`.
 - **Live updates**: `/ws` WebSocket. Events: `hello`, `camera.status`, `cameras.changed`,
-  `camera.live` (per camera about once a second: frame timestamp, people, class scores,
+  `camera.live` (per camera about once a second: frame timestamp, people and object counts, class scores,
   unsupervised score and reason, learning progress, active alerts, fps), `incident.created`,
   `incident.updated`, `normality.job`, `library.job`, `library.changed`. The frontend
-  (`src/api/live.ts`) patches TanStack Query caches; `camera.live` lives in the `['live']` key.
+  (`src/api/live.ts`) patches TanStack Query caches; `camera.live` lives in the `['live']` key,
+  and the last 60 s of scores per camera (for the sparklines) in `['live-history']`, collected
+  in the browser since the page opened.
+- **Overlay**: `?overlay=1` streams draw thin white boxes (track ids, poses) and a red box with a
+  red label (class and score) on what caused an active alarm: the unsupervised finding's track, or
+  the fire detector's boxes. Fight and car accident classify the whole clip, so they have no box.
+  The incident thumbnail uses the same drawing (`overlay.alarm_marks`).
 - **System status**: `GET /api/system` (cameras online, GPU load and VRAM from nvidia-smi,
-  models loaded, open issues) drives the top bar health text and the bottom status bar.
+  models loaded, open issues); the header shows GPU % and VRAM from it.
 - **Storage**: SQLite at `data/vad.db` (tables `cameras`, `incidents`, `feedback`,
   `library_videos`, `meta`). `db._migrate` upgrades older databases on start.
 
@@ -118,15 +125,18 @@ camera source ──> CameraWorker thread (one per camera, app/cameras.py)
 - `data/` (gitignored) — `vad.db`, `models/`, `normality/`, `incidents/`, `downloads/`,
   `library/<dataset>/`, `uploads/`, `ultralytics/`.
 - `frontend/src/api/` — fetch client, query hooks, WebSocket sync.
-- `frontend/src/lib/` — `format.ts`, `classes.ts` (labels, severity), `live.ts`, `prefs.ts`
-  (per-browser settings), `useNow.ts`.
-- `frontend/src/ui/` — component kit: Button, Chip and Count, Panel, PanelHeader and PageBar,
-  Field/Input/Select, Dialog, Drawer, Toast, Tabs, ToggleGroup and ToggleButton, States.
-- `frontend/src/components/` — Layout (app shell), Sidebar, TopBar, StatusBar, VideoTile,
-  CameraStream, AlarmQueue, IncidentDrawer, ScoreBar, ScoreChart, SeverityIcon, CameraDialog,
-  CameraSettingsDialog (thresholds, unsupervised model, heatmap), VideoDialog, `library/`.
-- `frontend/src/pages/` — Live, Incidents (TanStack Table), Cameras, Test videos, Training
-  (models and labels), PlaceholderPages (Compare models behind the flag, not found).
+- `frontend/src/lib/` — `format.ts` (labels, state words, raised-by swatches), `classes.ts`
+  (class labels, icons), `live.ts` (live alarms from `camera.live`).
+- `frontend/src/ui/` — component kit: Button, Chip and Pill, Panel and Card, Field/Input/Select,
+  Dialog, Toast, Tabs, ToggleGroup (segmented control), Skeleton, EmptyState, ErrorState, ProgressBar.
+- `frontend/src/components/` — Layout, TopBar (camera group selector, nav, GPU and VRAM, clock),
+  PipelineStatus (segmented status bar), CameraGrid, CameraTile (video plus 32px info bar),
+  FocusTile (2 x 2, alarm border, scores and 60 s chart), ScoreSparkline (Sparkline, ScoreChart),
+  ScoreMeter, CameraStream, AddCameraTile, IncidentQueue (Alarms panel), IncidentCard,
+  AlarmTimeline, CameraDialog, CameraSettingsDialog (thresholds, unsupervised model, heatmap),
+  VideoDialog, `library/`.
+- `frontend/src/pages/` — Live, Incidents, Test videos, Cameras, Training (models and labels),
+  PlaceholderPages (Compare models behind the flag, not found).
 
 ## API
 
@@ -183,46 +193,51 @@ The API's Incident adds `severity` ("critical" | "warning"), `thumbnail_url`, `r
 
 ## Design system
 
-Operator console, modelled on professional video management clients. Utilitarian, dense
-and calm, for someone who watches it for 8 hours.
+Dark surveillance console with the step 3 layout, refined in design v3.
 
 | Token (Tailwind) | Value | Use |
 | --- | --- | --- |
-| `page` | `#0B0E12` | page background |
-| `panel` | `#12161C` | sidebar, bars, panels |
-| `raised` | `#181D24` | hover, selected rows, controls |
-| `field` | `#0E1217` | inputs, bar tracks |
-| `video` | `#050608` | video wall |
-| `line` | `#232A33` | every 1px border |
-| `ink` | `#E6E9ED` | text |
-| `ink-2` | `#A3ACB8` | secondary text |
-| `muted` | `#6B7480` | muted text |
-| `accent` | `#4C8DFF` | selection and focus only |
-| `crit` | `#E5484D` | status: critical, alerting tile |
-| `warn` | `#E2A336` | status: warning |
-| `ok` | `#3DB37A` | status: ok |
-| `sup` | `#C9A25B` | supervised, only in score bars and charts |
-| `unsup` | `#6E9FD6` | unsupervised, only in score bars and charts |
+| `page` | `#0A111A` | page background |
+| `header` | `#0D1520` | header |
+| `panel` | `#0F1823` | panels, status bar segments |
+| `card` | `#121C29` | camera tiles, alarm cards |
+| `raised` | `#172333` | hover and selected surfaces |
+| `field` | `#0B131D` | inputs, bar tracks |
+| `line` / `line-strong` | `#1C2838` / `#1E2A3A` | borders |
+| `ink` | `#E8EEF5` | text |
+| `ink-2` | `#B4C1D0` | secondary text |
+| `muted` | `#8FA0B4` | muted text |
+| `sup` | `#F2B04A` | supervised (amber) |
+| `unsup` | `#5AA9F2` | unsupervised (blue) |
+| `alarm` | `#FF5A5F` | live alarm only |
+| `healthy` | `#3FCF8E` | healthy state |
 
-- Fonts: **IBM Plex Sans** for UI, **IBM Plex Mono** for times, ids and numbers (Google Fonts).
-  Sizes 12, 13, 14, 16 and 20 only. Weights 400, 500 and 600.
-- Radius: panels 4 (`rounded`), controls 3 (`rounded-md`), badges and video 2 (`rounded-sm`).
-  1px borders, no shadows.
-- Icons: lucide-react only, 16px, stroke 1.5 (set globally for `svg.lucide`).
-- Layout: sidebar 220px (collapsible to 56px, drawer on phones), top bar 48px (page title,
-  health text, date and time), status bar 24px (cameras online, GPU, VRAM, models, backend).
+- Fonts: **Barlow** for the UI, **IBM Plex Mono** (`font-mono`) for times, ids and numbers.
+- Radius: tiles and panels 8 (`rounded-xl`), buttons 6 (`rounded-lg`), labels and badges 4 (`rounded-md`).
+- Header 56px: camera group selector ("All cameras", green dot, "n online"; lists every camera),
+  nav tabs (active: white text and a 2px white line), GPU % and VRAM, clock in mono and date.
+- Under the header, one segmented status bar: Streams, Detection fps, Supervised (n models),
+  Unsupervised (n ready, n learning), each with a dot; Add camera on the right.
+- Camera tile: video on top (name label top-left, id top-right, white bell badge with the number
+  to review), 32px info bar below (amber and blue dots, state word, object count, 60 s sparkline of
+  the highest score relative to its threshold, dashed line at the threshold).
+- Focus tile (2 x 2): the alerting camera, 2px red border, red label with an alert icon, class
+  and score; info bar with both score bars, a 60 s chart of both scores with dashed thresholds,
+  Open incident and full screen.
+- Alarms panel: count badge, View all, segmented filter (All, Both, Supervised, Unsup.) with
+  counts; alarm cards (104x58 thumbnail, class, time, camera, raised-by tag with swatch, reason,
+  both scores with threshold ticks, Confirm, False alarm or This is normal for unsupervised
+  alarms, Clip). New alarms fade in once; a decision leaves a status line with Undo.
+- Alarm timeline: one lane per camera, amber, blue or half and half markers, a Now line.
 - The browser tab title is the page name. No favicon.
 
 ## Rules
 
 - No product name, no logo, no "AI" wording.
-- No gradients, glows, pulsing, blur, glass, coloured shadows, emoji, illustrations or
-  decorative icons. No pills, no cards inside cards, no uppercase letter-spaced labels.
-- Status colours (red, amber, green) only for status, always with an icon or text. Severity:
-  critical (octagon icon, red) for supervised classes, warning (triangle, amber) for unsupervised.
-- The supervised and unsupervised colours only in score bars and charts.
-- Copy is short and neutral, like an operator console: "No open alarms", "Camera offline",
-  "Confirm", "False alarm". No exclamation marks, no marketing copy.
+- No gradients, glows, pulsing, blur, emoji or playful copy. The only motion: new alarms fade in once.
+- Red only for a live alarm. Amber means supervised, blue unsupervised.
+- Filled dot = model active, hollow ring = not ready yet.
+- Copy is short and neutral: "No open alarms", "Confirm", "False alarm".
 - Every number comes from backend data. When data is missing or stale, show "n/a".
 - Every list has a loading state (static, no animation), an empty state that says what to do
   next, and an error state with Retry. Everything clickable has hover and focus states and

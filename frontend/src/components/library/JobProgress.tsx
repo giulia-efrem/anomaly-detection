@@ -28,7 +28,7 @@ export default function JobProgress({ job }: { job: LibraryJob }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2 text-[13px]">
         <span className="text-ink-2">{STAGE_TEXT[job.stage]}</span>
-        <span className="font-cond text-muted">
+        <span className="font-mono text-muted">
           {jobDetail(job)}
           {!indeterminate && job.stage !== 'done' && ` · ${Math.round(job.progress * 100)}%`}
         </span>

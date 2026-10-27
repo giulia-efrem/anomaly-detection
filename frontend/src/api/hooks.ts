@@ -13,6 +13,8 @@ import type {
   NormalityJob,
   NormalitySummary,
   PipelineStatus,
+  ScorePoint,
+  SystemStatus,
 } from '../types'
 import { api } from './client'
 
@@ -27,6 +29,8 @@ export const keys = {
   normality: (cameraId: string) => ['normality', cameraId] as const,
   /** Filled only by WebSocket events, never fetched. */
   live: ['live'] as const,
+  history: ['live-history'] as const,
+  system: ['system'] as const,
   normalityJobs: ['normality-jobs'] as const,
 }
 
@@ -47,6 +51,10 @@ export const useCatalog = () => useQuery({ queryKey: keys.catalog, queryFn: () =
 
 export const useJobs = () => useQuery({ queryKey: keys.jobs, queryFn: () => api.get<LibraryJob[]>('/api/library/jobs') })
 
+/** GPU load and memory, models loaded. Polled: GPU load changes without any event. */
+export const useSystem = () =>
+  useQuery({ queryKey: keys.system, queryFn: () => api.get<SystemStatus>('/api/system'), refetchInterval: 5_000 })
+
 export const useModels = () =>
   useQuery({ queryKey: keys.models, queryFn: () => api.get<ModelsStatus>('/api/models'), refetchInterval: 10_000 })
 
@@ -62,6 +70,10 @@ const noFetch = () => ({})
 /** Per-camera live state pushed over the WebSocket ("camera.live"). */
 export const useLiveState = () =>
   useQuery<Record<string, CameraLive>>({ queryKey: keys.live, queryFn: noFetch, enabled: false, initialData: {} }).data
+
+/** Last 60 s of scores per camera, collected from camera.live events since the page opened. */
+export const useScoreHistory = () =>
+  useQuery<Record<string, ScorePoint[]>>({ queryKey: keys.history, queryFn: noFetch, enabled: false, initialData: {} }).data
 
 /** Learning-from-clip jobs per camera ("normality.job"). */
 export const useNormalityJobs = () =>

@@ -5,7 +5,7 @@ import { Button } from './Button'
 import { cx } from './cx'
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cx('animate-shimmer rounded-lg bg-[#1A2840]', className)} />
+  return <div aria-hidden="true" className={cx('rounded-lg bg-card', className)} />
 }
 
 interface EmptyStateProps {
@@ -67,10 +67,10 @@ export function ProgressBar({ value, label, className }: { value: number | null;
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={pct ?? undefined}
-      className={cx('relative h-1.5 overflow-hidden rounded-full bg-field', className)}
+      className={cx('relative h-1.5 overflow-hidden rounded-md bg-field', className)}
     >
       <div
-        className={cx('absolute inset-y-0 left-0 rounded-full bg-unsup transition-[width] duration-300', pct === null && 'w-1/3 animate-shimmer')}
+        className={cx('absolute inset-y-0 left-0 rounded-md bg-unsup transition-[width] duration-300', pct === null && 'w-1/3 opacity-60')}
         style={pct === null ? undefined : { width: `${pct}%` }}
       />
     </div>

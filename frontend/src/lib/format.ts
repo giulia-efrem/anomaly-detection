@@ -6,9 +6,16 @@ export function typeLabel(type: IncidentType): string {
 }
 
 export const RAISED_BY_LABELS: Record<RaisedBy, string> = {
-  both: 'Both models',
-  supervised: 'Pretrained model only',
-  unsupervised: 'Scene normality only',
+  both: 'Both',
+  supervised: 'Supervised',
+  unsupervised: 'Unsupervised',
+}
+
+/** Swatch for a "raised by" tag or timeline marker: amber, blue, or half and half. */
+export const RAISED_BY_SWATCH: Record<RaisedBy, string> = {
+  supervised: 'var(--color-sup)',
+  unsupervised: 'var(--color-unsup)',
+  both: 'linear-gradient(to right, var(--color-sup) 50%, var(--color-unsup) 50%)',
 }
 
 /** "2026-10-25T11:39:00" -> "11:39:00", without timezone conversion. */
@@ -58,21 +65,21 @@ export interface ChipState {
 
 export function supervisedChip(camera: Camera): ChipState {
   return camera.supervised === 'on'
-    ? { label: 'Pretrained on', active: true }
-    : { label: 'Pretrained off', active: false }
+    ? { label: 'Supervised on', active: true }
+    : { label: 'Supervised off', active: false }
 }
 
-/** `progress` overrides the camera's stored value with the live one. */
+/** State of the unsupervised model in one word or two. `progress` is the live value. */
 export function unsupervisedChip(camera: Camera, progress?: number | null): ChipState {
   switch (camera.unsupervised) {
     case 'ready':
-      return { label: 'Scene model ready', active: true }
+      return { label: 'Ready', active: true }
     case 'collecting':
       return { label: 'Collecting footage', active: false }
     case 'learning':
       return { label: `Learning ${Math.floor((progress ?? camera.learning_progress ?? 0) * 100)}%`, active: false }
     case 'off':
-      return { label: 'Scene model off', active: false }
+      return { label: 'Unsupervised off', active: false }
   }
 }
 

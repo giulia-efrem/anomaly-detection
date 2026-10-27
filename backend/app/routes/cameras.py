@@ -190,8 +190,8 @@ def _overlay_jpeg(camera_id: str, frame: Any) -> bytes:
     st = pipeline.state(camera_id)
     if st is None:
         return frame.jpeg
-    f = st.unsup_finding
-    img = overlay.draw(frame.image, st.objects, st.boxes, f.track_id if f and st.unsup_score >= 0.5 else None)
+    active = [a["key"] for a in pipeline.alerts.live(camera_id)] if pipeline.alerts else []
+    img = overlay.draw(frame.image, st.objects, st.boxes, **overlay.alarm_marks(active, st))
     ok, jpg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, config.JPEG_QUALITY])
     data = jpg.tobytes() if ok else frame.jpeg
     with _overlay_lock:

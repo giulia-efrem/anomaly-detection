@@ -1,6 +1,8 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import type { Camera, CameraLive, Catalog, Incident, LibraryJob, NormalityJob, StreamStatus } from '../types'
+import { SUPERVISED_TYPES, type Camera, type CameraLive, type Catalog, type Incident, type LibraryJob, type NormalityJob, type ScorePoint, type StreamStatus } from '../types'
+
+const HISTORY_MS = 60_000
 import { keys } from './hooks'
 
 type LiveEvent =
@@ -43,6 +45,23 @@ function apply(qc: QueryClient, e: LiveEvent) {
     case 'camera.live': {
       const { type: _type, ...state } = e
       qc.setQueryData<Record<string, CameraLive>>(keys.live, (m) => ({ ...m, [state.camera_id]: state }))
+      // Score history for the sparklines: the best supervised class (with its threshold) and the unsupervised score.
+      const cam = qc.getQueryData<Camera[]>(keys.cameras)?.find((c) => c.id === state.camera_id)
+      if (cam) {
+        const best = SUPERVISED_TYPES.reduce((a, b) => (state.scores[b] / cam.thresholds[b] > state.scores[a] / cam.thresholds[a] ? b : a))
+        const now = Date.now()
+        const point: ScorePoint = {
+          t: now,
+          sup: state.scores[best],
+          supThr: cam.thresholds[best],
+          unsup: state.unsupervised.score,
+          unsupThr: cam.thresholds.unsupervised,
+        }
+        qc.setQueryData<Record<string, ScorePoint[]>>(keys.history, (m) => ({
+          ...m,
+          [state.camera_id]: [...(m?.[state.camera_id] ?? []).filter((p) => now - p.t <= HISTORY_MS), point],
+        }))
+      }
       // Keep the stored learning state honest without refetching every second.
       qc.setQueryData<Camera[]>(keys.cameras, (list) =>
         list?.map((c) =>

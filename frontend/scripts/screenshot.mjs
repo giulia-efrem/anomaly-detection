@@ -30,16 +30,17 @@ try {
     await page.waitForFunction(
       () => {
         const imgs = [...document.querySelectorAll('section[aria-label="Cameras"] img')]
-        return imgs.length >= 7 && imgs.every((i) => i.naturalWidth > 0)
+        return imgs.length >= 1 && imgs.every((i) => i.naturalWidth > 0)
       },
       null,
-      { timeout: 20000 },
+      { timeout: 30000 },
     ).catch(() => {})
     const streams = await page.evaluate(() =>
       [...document.querySelectorAll('section[aria-label="Cameras"] img')].filter((i) => i.naturalWidth > 0).length,
     )
     console.log(`${width}px: ${streams} camera streams showing frames`)
-    await page.waitForTimeout(500)
+    // The sparklines collect history while the page is open: give them 25 s.
+    await page.waitForTimeout(25000)
     await shoot(page, 'live', width)
 
     await page.goto(base + '/incidents', { waitUntil: 'networkidle' })

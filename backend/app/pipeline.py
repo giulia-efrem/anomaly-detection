@@ -35,6 +35,7 @@ import numpy as np
 from . import config, db, model_files
 from .cameras import CameraManager
 from .detectors import PLUGINS, SUPERVISED_CLASSES, Box, Detector, TrackedObject, Window
+from .detectors.base import SCENERY
 from .events import bus
 from .normality import NormalityModel
 
@@ -491,6 +492,7 @@ class Pipeline(threading.Thread):
             "camera_id": st.camera_id,
             "ts": round(st.image_ts, 3),  # capture time of the analysed frame
             "people_count": st.people_count,
+            "object_count": sum(1 for o in st.objects if o.cls not in SCENERY),
             "scores": {k: round(v, 3) for k, v in self.class_scores(st).items()},
             "unsupervised": {"score": round(st.unsup_score, 3), "reason": f.reason if f else None,
                              "text": f.text if f else None},

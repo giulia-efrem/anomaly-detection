@@ -63,7 +63,7 @@ function ThresholdSlider({ k, value, onCommit }: { k: ThresholdKey; value: numbe
         onBlur={() => v !== value && onCommit(v)}
         className="h-8 flex-1 accent-[#C3CFDC]"
       />
-      <span className="w-10 text-right font-cond text-[13px]">{v.toFixed(2)}</span>
+      <span className="w-10 text-right font-mono text-[13px]">{v.toFixed(2)}</span>
     </div>
   )
 }
@@ -193,11 +193,11 @@ function Settings({ camera }: { camera: Camera }) {
               </Field>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
                 <dt className="text-muted">Learned</dt>
-                <dd className="font-cond">{formatDuration(n.seconds)} of footage</dd>
+                <dd className="font-mono">{formatDuration(n.seconds)} of footage</dd>
                 <dt className="text-muted">Usually</dt>
-                <dd className="font-cond">{n.people_p99 === null ? 'n/a' : `at most ${n.people_p99} people`}</dd>
+                <dd className="font-mono">{n.people_p99 === null ? 'n/a' : `at most ${n.people_p99} people`}</dd>
                 <dt className="text-muted">Poses</dt>
-                <dd className="font-cond">{n.poses} kept</dd>
+                <dd className="font-mono">{n.poses} kept</dd>
               </dl>
               <Field label="Learning length (minutes)" hint="A new camera learns this long before it starts scoring.">
                 {(p) => (

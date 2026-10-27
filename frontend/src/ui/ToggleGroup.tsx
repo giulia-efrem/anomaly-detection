@@ -5,12 +5,13 @@ interface ToggleGroupProps<T extends string> {
   options: { id: T; label: string; count?: number }[]
   value: T
   onChange: (id: T) => void
+  className?: string
 }
 
-/** Single-choice filter buttons (aria-pressed). Active: light fill; inactive: quiet surface. */
-export function ToggleGroup<T extends string>({ label, options, value, onChange }: ToggleGroupProps<T>) {
+/** Segmented control in one container (aria-pressed). Active: raised surface and white text. */
+export function ToggleGroup<T extends string>({ label, options, value, onChange, className }: ToggleGroupProps<T>) {
   return (
-    <div role="group" aria-label={label} className="flex flex-wrap gap-1">
+    <div role="group" aria-label={label} className={cx('inline-flex rounded-lg border border-line-strong bg-field p-0.5', className)}>
       {options.map((o) => {
         const active = o.id === value
         return (
@@ -20,14 +21,12 @@ export function ToggleGroup<T extends string>({ label, options, value, onChange 
             aria-pressed={active}
             onClick={() => onChange(o.id)}
             className={cx(
-              'inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-semibold transition-colors',
-              active ? 'bg-ink text-on-light' : 'bg-raised text-ink-2 hover:bg-[#233550] hover:text-ink',
+              'inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 text-[13px] whitespace-nowrap transition-colors',
+              active ? 'bg-raised font-semibold text-white' : 'text-ink-2 hover:text-ink',
             )}
           >
             {o.label}
-            {o.count !== undefined && (
-              <span className={cx('font-cond font-medium', active ? 'text-[#3A4D66]' : 'text-muted')}>{o.count}</span>
-            )}
+            {o.count !== undefined && <span className={cx('font-mono text-[12px]', active ? 'text-ink-2' : 'text-muted')}>{o.count}</span>}
           </button>
         )
       })}

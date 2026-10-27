@@ -79,7 +79,11 @@ export interface CameraSettings {
 /** What the pipeline sees on one camera right now ("camera.live", about once a second). */
 export interface CameraLive {
   camera_id: string
+  /** Capture time of the analysed frame, seconds since the epoch. */
+  ts: number
   people_count: number
+  /** Tracked objects in view, furniture excluded. */
+  object_count: number
   scores: Record<SupervisedType, number>
   unsupervised: { score: number; reason: UnsupervisedType | null; text: string | null }
   learning_progress: number | null
@@ -138,6 +142,23 @@ export interface ModelInfo {
   device: string | null
   vram_mb: number | null
   error: string | null
+}
+
+/** One point of a camera's score history (from camera.live, about once a second). */
+export interface ScorePoint {
+  t: number // ms since the epoch, client clock
+  sup: number // highest supervised class score
+  supThr: number // threshold of that class
+  unsup: number
+  unsupThr: number
+}
+
+export interface SystemStatus {
+  cameras: { online: number; total: number }
+  gpu: { name: string; util_pct: number; used_mb: number; total_mb: number } | null
+  models: { loaded: number; total: number; ready: boolean }
+  analysis_fps: number | null
+  issues: string[]
 }
 
 export interface ModelsStatus {

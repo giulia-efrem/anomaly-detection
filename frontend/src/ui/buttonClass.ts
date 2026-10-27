@@ -5,13 +5,13 @@ export type ButtonSize = 'sm' | 'md'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-ink text-on-light hover:bg-white active:bg-ink-2',
-  secondary: 'bg-raised text-ink hover:bg-[#233550] active:bg-[#1F3049]',
+  secondary: 'border border-line-strong bg-card text-ink hover:bg-raised active:bg-[#1c2a3d]',
   ghost: 'text-ink-2 hover:bg-raised hover:text-ink',
-  overlay: 'bg-[rgba(8,14,22,0.72)] text-ink-2 backdrop-blur-sm hover:bg-[rgba(16,26,40,0.9)] hover:text-ink',
+  overlay: 'bg-[rgba(7,12,18,0.82)] text-ink-2 hover:bg-[rgba(7,12,18,0.95)] hover:text-ink',
 }
 
 export const SIZES: Record<ButtonSize, { base: string; icon: string; iconSize: number }> = {
-  sm: { base: 'h-8 gap-1.5 px-3 text-[13px]', icon: 'h-8 w-8', iconSize: 15 },
+  sm: { base: 'h-7 gap-1.5 px-2.5 text-[13px]', icon: 'h-7 w-7', iconSize: 14 },
   md: { base: 'h-10 gap-2 px-4 text-[14px]', icon: 'h-10 w-10', iconSize: 16 },
 }
 

@@ -37,7 +37,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
       }}
       onClick={(e) => e.target === ref.current && onClose()}
       className={cx(
-        'm-auto w-[calc(100%-32px)] rounded-xl bg-panel p-0 text-ink shadow-[0_24px_64px_rgba(0,0,0,0.5)]',
+        'm-auto w-[calc(100%-32px)] rounded-xl border border-line-strong bg-panel p-0 text-ink',
         WIDTHS[size],
       )}
     >

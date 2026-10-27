@@ -1,50 +1,38 @@
-import { ChevronRight, Plus } from 'lucide-react'
-import { Fragment } from 'react'
+import { Plus } from 'lucide-react'
 import { usePipelineStatus } from '../api/hooks'
 import { Button } from '../ui/Button'
 import { Skeleton } from '../ui/States'
 import StatusDot from '../ui/StatusDot'
 
+/** Streams, Detection, Supervised and Unsupervised in one segmented bar, from /api/status. */
 export default function PipelineStatus({ onAddCamera }: { onAddCamera: () => void }) {
   const { data, isLoading, isError } = usePipelineStatus()
   const slots = data?.camera_slots
   const full = slots ? slots.used >= slots.total : false
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4">
-      <span className="text-[13px] text-muted">Pipeline</span>
+    <div className="flex flex-wrap items-center gap-3 px-6 py-3">
       {isLoading ? (
-        <Skeleton className="h-8 w-[min(560px,100%)] rounded-full" />
+        <Skeleton className="h-9 w-[min(640px,100%)]" />
       ) : isError || !data ? (
-        <span className="text-[13px] text-muted">Status unavailable</span>
+        <span className="text-[13px] text-muted">Pipeline status unavailable</span>
       ) : (
-        <ol className="flex flex-wrap items-center gap-x-1 gap-y-2">
-          {data.stages.map((s, i) => (
-            <Fragment key={s.key}>
-              {i > 0 && (
-                <li aria-hidden="true" className="hidden text-[#3E5470] sm:block">
-                  <ChevronRight size={14} />
-                </li>
-              )}
-              <li className="inline-flex h-8 items-center gap-2 rounded-full bg-[#121E2D] px-3 text-[13px] whitespace-nowrap">
-                <StatusDot color={s.active ? 'var(--color-healthy)' : 'var(--color-muted)'} active={s.active} size={7} />
-                <span className="text-ink-2">{s.label}</span>
-                <span className="font-cond text-muted">{s.detail}</span>
-              </li>
-            </Fragment>
+        <ol
+          aria-label="Pipeline"
+          className="flex max-w-full flex-wrap overflow-hidden rounded-xl border border-line-strong bg-panel"
+        >
+          {data.stages.map((s) => (
+            <li key={s.key} className="flex h-9 items-center gap-2 border-r border-line-strong px-3 text-[13px] whitespace-nowrap last:border-r-0">
+              <StatusDot color={s.active ? 'var(--color-healthy)' : 'var(--color-muted)'} active={s.active} size={7} />
+              <span className="text-ink-2">{s.label}</span>
+              <span className="font-mono text-[12px] text-ink">{s.detail}</span>
+            </li>
           ))}
         </ol>
       )}
-      <div className="ml-auto flex items-center gap-3">
-        {slots && (
-          <span className="text-[13px] text-muted">
-            {slots.used} of {slots.total} camera slots
-          </span>
-        )}
-        <Button size="sm" icon={Plus} onClick={onAddCamera} disabled={full}>
-          Add camera
-        </Button>
-      </div>
+      <Button size="sm" variant="secondary" icon={Plus} onClick={onAddCamera} disabled={full} className="ml-auto">
+        Add camera
+      </Button>
     </div>
   )
 }

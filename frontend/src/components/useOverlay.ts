@@ -10,9 +10,9 @@ function read(): Record<string, boolean> {
   }
 }
 
-/** Whether a camera tile shows boxes, track ids and poses. Remembered per camera in this browser. */
+/** Whether a camera tile shows boxes, track ids and poses (on by default). Remembered per camera in this browser. */
 export function useOverlay(cameraId: string): [boolean, () => void] {
-  const [on, setOn] = useState(() => !!read()[cameraId])
+  const [on, setOn] = useState(() => read()[cameraId] ?? true)
   const toggle = () => {
     const next = !on
     setOn(next)

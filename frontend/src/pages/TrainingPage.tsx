@@ -39,9 +39,9 @@ function ModelRow({ m }: { m: ModelInfo }) {
           {s.label}
         </dd>
         <dt className="text-muted">Runs on</dt>
-        <dd className="font-cond">{m.device ? (m.device === 'cuda' ? 'GPU' : 'CPU') : 'n/a'}</dd>
+        <dd className="font-mono">{m.device ? (m.device === 'cuda' ? 'GPU' : 'CPU') : 'n/a'}</dd>
         <dt className="text-muted">Memory</dt>
-        <dd className="font-cond">{m.vram_mb === null ? 'n/a' : `${Math.max(1, Math.round(m.vram_mb))} MB of VRAM`}</dd>
+        <dd className="font-mono">{m.vram_mb === null ? 'n/a' : `${Math.max(1, Math.round(m.vram_mb))} MB of VRAM`}</dd>
       </dl>
       <dl className="grid grid-cols-[auto_1fr] content-start gap-x-3 gap-y-0.5 text-[13px]">
         <dt className="text-muted">License</dt>
@@ -51,7 +51,7 @@ function ModelRow({ m }: { m: ModelInfo }) {
           </a>
         </dd>
         <dt className="text-muted">Weights</dt>
-        <dd className="font-cond">{formatBytes(m.size_bytes)}</dd>
+        <dd className="font-mono">{formatBytes(m.size_bytes)}</dd>
         <dt className="text-muted">Source</dt>
         <dd>
           <a
@@ -112,7 +112,7 @@ export default function TrainingPage() {
                 <div className="mx-2 mb-4 flex flex-col gap-2 rounded-lg bg-card p-3">
                   <div className="flex flex-wrap justify-between gap-2 text-[13px]">
                     <span className="text-ink-2">{gpu.name}</span>
-                    <span className="font-cond text-muted">
+                    <span className="font-mono text-muted">
                       {(gpu.used_mb / 1024).toFixed(1)} of {(gpu.total_mb / 1024).toFixed(1)} GB in use (all programs)
                     </span>
                   </div>
@@ -143,7 +143,7 @@ export default function TrainingPage() {
             ).map(([k, label]) => (
               <div key={k} className="rounded-lg bg-card p-3">
                 <dt className="text-[13px] text-muted">{label}</dt>
-                <dd className="font-cond text-[24px] leading-8 font-medium">{models.isLoading ? '–' : (fb[k] ?? 0)}</dd>
+                <dd className="font-mono text-[24px] leading-8 font-medium">{models.isLoading ? '–' : (fb[k] ?? 0)}</dd>
               </div>
             ))}
           </dl>

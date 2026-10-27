@@ -1,10 +1,9 @@
-import { score } from '../lib/format'
 import type { Method } from '../types'
 import { cx } from '../ui/cx'
 
 const METHOD_LABEL: Record<Method, string> = {
-  supervised: 'Pretrained',
-  unsupervised: 'Scene',
+  supervised: 'Supervised',
+  unsupervised: 'Unsupervised',
 }
 
 const METHOD_COLOR: Record<Method, string> = {
@@ -15,34 +14,30 @@ const METHOD_COLOR: Record<Method, string> = {
 interface ScoreMeterProps {
   method: Method
   value: number | null
-  /** When given, a tick marks it and the bar turns gray below it. */
+  /** When given, a tick marks it and the bar turns grey below it. */
   threshold?: number
-  /** Word shown after the value when it is above threshold, e.g. "fight". */
-  suffix?: string
+  /** Label column width in px; 0 hides the label. */
   labelWidth?: number
-  /** Track colour, so the bar reads on both cards and video overlays. */
-  trackClass?: string
+  /** Short label ("Sup" / "Unsup") for narrow places. */
+  short?: boolean
+  className?: string
 }
 
-export default function ScoreMeter({
-  method,
-  value,
-  threshold,
-  suffix,
-  labelWidth = 88,
-  trackClass = 'bg-field',
-}: ScoreMeterProps) {
+/** Thin score bar with a threshold tick and the value in mono. */
+export default function ScoreMeter({ method, value, threshold, labelWidth = 88, short = false, className }: ScoreMeterProps) {
   const above = value !== null && (threshold === undefined || value >= threshold)
   const pct = value === null ? 0 : Math.max(0, Math.min(1, value)) * 100
   const label = METHOD_LABEL[method]
 
   return (
-    <div className="flex items-center gap-3 text-[13px]">
-      <span className="shrink-0 text-ink-2" style={{ width: labelWidth }}>
-        {label}
-      </span>
+    <div className={cx('flex items-center gap-2 text-[12px]', className)}>
+      {labelWidth > 0 && (
+        <span className="shrink-0 text-ink-2" style={{ width: labelWidth }}>
+          {short ? (method === 'supervised' ? 'Sup' : 'Unsup') : label}
+        </span>
+      )}
       <div
-        className={cx('relative h-1.5 min-w-10 flex-1 rounded-full', trackClass)}
+        className="relative h-1 min-w-8 flex-1 rounded-md bg-field"
         role="meter"
         aria-label={`${label} score`}
         aria-valuemin={0}
@@ -50,20 +45,19 @@ export default function ScoreMeter({
         aria-valuenow={value ?? undefined}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{ width: `${pct}%`, background: above ? METHOD_COLOR[method] : '#3A4D66' }}
+          className="absolute inset-y-0 left-0 rounded-md"
+          style={{ width: `${pct}%`, background: above ? METHOD_COLOR[method] : '#3a4b60' }}
         />
         {threshold !== undefined && (
           <div
-            className="absolute -top-[3px] -bottom-[3px] w-[2px] -translate-x-1/2 rounded-full bg-muted"
+            className="absolute -top-[3px] -bottom-[3px] w-px -translate-x-1/2 bg-ink-2"
             style={{ left: `${threshold * 100}%` }}
-            title={`Threshold ${score(threshold)}`}
+            title={`Threshold ${threshold.toFixed(2)}`}
           />
         )}
       </div>
-      <span className={cx('shrink-0 font-cond whitespace-nowrap', above ? 'font-semibold text-ink' : 'text-muted')}>
-        {value === null ? 'n/a' : score(value)}
-        {above && suffix && <span className="font-medium text-ink-2"> {suffix}</span>}
+      <span className={cx('w-8 shrink-0 text-right font-mono', above ? 'text-ink' : 'text-muted')}>
+        {value === null ? 'n/a' : value.toFixed(2)}
       </span>
     </div>
   )

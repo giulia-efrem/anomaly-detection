@@ -42,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={t.id}
               role={tone === 'error' ? 'alert' : 'status'}
-              className="pointer-events-auto flex w-full animate-toast-in items-start gap-3 rounded-xl bg-raised p-4 shadow-[0_12px_32px_rgba(0,0,0,0.45)] sm:w-[400px]"
+              className="pointer-events-auto flex w-full animate-toast-in items-start gap-3 rounded-xl border border-line-strong bg-card p-4 sm:w-[400px]"
             >
               <Icon size={18} className={cx('mt-0.5 shrink-0', ICON_COLORS[tone])} aria-hidden="true" />
               <div className="min-w-0 flex-1">

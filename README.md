@@ -11,13 +11,12 @@ built for a bachelor thesis. Each camera is watched by two kinds of detectors:
   how long they stay and which body poses are normal, then flags anything rare
   and says why ("Truck on a camera where trucks were never seen").
 
-The interface follows professional video management clients: a video wall
-with 1, 4, 9 or 16 cameras, an alarm queue, an incident table with a detail
-drawer (clip, scores over time, detections), and a status bar with real system
-figures. Supervised alarms are critical, unsupervised alarms are warnings.
-Operators confirm, dismiss or mark alarms "This is normal"; the decisions are
-kept as labels for retraining. A library of public test videos plays as virtual
-cameras.
+The Live page shows a camera grid with a large focus tile for the alerting
+camera, an alarms panel and an alarm timeline. Each tile shows the stream with
+detection boxes (red on the object that caused an alarm), the state of both
+models and a 60 second score sparkline. Operators confirm, dismiss or mark
+alarms "This is normal"; the decisions are kept as labels for retraining. A
+library of public test videos plays as virtual cameras.
 
 ## Requirements
 
@@ -123,4 +122,4 @@ stay open source.
 Main libraries: FastAPI (MIT), OpenCV (Apache 2.0), PyTorch (BSD-3-Clause),
 Ultralytics (AGPL-3.0), PyTorchVideo (Apache 2.0), ffmpeg via imageio-ffmpeg
 (LGPL/GPL binary), React (MIT), TanStack Query (MIT), Tailwind CSS (MIT),
-TanStack Table (MIT), lucide-react (ISC), IBM Plex fonts (SIL Open Font License).
+lucide-react (ISC), Barlow and IBM Plex Mono fonts (SIL Open Font License).

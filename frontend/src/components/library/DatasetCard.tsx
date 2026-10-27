@@ -42,7 +42,7 @@ export default function DatasetCard({ dataset: d, typeLabels, onBrowse }: Datase
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
         <dt className="text-muted">Size</dt>
-        <dd className="font-cond">
+        <dd className="font-mono">
           {formatBytes(d.size_bytes)}, {d.clip_count} clips
         </dd>
         <dt className="text-muted">License</dt>

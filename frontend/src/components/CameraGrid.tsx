@@ -1,6 +1,6 @@
 import { Cctv, Clapperboard, Plus } from 'lucide-react'
 import { Link } from 'react-router'
-import type { Camera, LiveAnomaly } from '../types'
+import type { Camera, LiveAnomaly, ScorePoint } from '../types'
 import { Button } from '../ui/Button'
 import { buttonClass } from '../ui/buttonClass'
 import { Panel } from '../ui/Panel'
@@ -17,6 +17,9 @@ interface CameraGridProps {
   live: LiveAnomaly | null
   /** Cameras with any anomaly above threshold right now. */
   alarmIds: Set<string>
+  /** Last 60 s of scores per camera, and the current time in ms. */
+  history: Record<string, ScorePoint[]>
+  now: number
   focusId: string | null
   onFocus: (id: string) => void
   slotsLeft: number
@@ -32,6 +35,8 @@ export default function CameraGrid({
   onRetry,
   live,
   alarmIds,
+  history,
+  now,
   focusId,
   onFocus,
   slotsLeft,
@@ -86,9 +91,16 @@ export default function CameraGrid({
 
   return (
     <section aria-label="Cameras" className={GRID}>
-      <FocusTile camera={focus} live={live?.camera_id === focus.id ? live : null} />
+      <FocusTile camera={focus} live={live?.camera_id === focus.id ? live : null} history={history[focus.id] ?? []} now={now} />
       {rest.map((c) => (
-        <CameraTile key={c.id} camera={c} alarm={alarmIds.has(c.id)} onFocus={() => onFocus(c.id)} />
+        <CameraTile
+          key={c.id}
+          camera={c}
+          history={history[c.id] ?? []}
+          now={now}
+          alarm={alarmIds.has(c.id)}
+          onFocus={() => onFocus(c.id)}
+        />
       ))}
       <AddCameraTile slotsLeft={slotsLeft} onClick={onAddCamera} />
     </section>
