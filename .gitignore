@@ -1,3 +1,8 @@
+# This repository is public. Dataset licenses forbid redistributing clips and
+# model weights are downloaded by backend/scripts/download_models.py, so none
+# of them may ever be committed.
+
+# Frontend
 node_modules
 dist
 screenshots
@@ -5,7 +10,53 @@ screenshots
 # Backend
 data/
 backend/.venv/
+.venv/
+venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 *.log
+
+# Datasets and videos
+datasets/
+dataset/
+downloads/
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.mpg
+*.mpeg
+*.webm
+*.m4v
+*.wmv
+*.tif
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.safetensors
+*.bin
+*.h5
+*.tflite
+*.pkl
+*.npz
+*.npy
+weights/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets*
+credentials*
