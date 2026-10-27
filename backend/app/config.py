@@ -46,7 +46,7 @@ DEFAULT_THRESHOLDS = {
     "fight": 0.6,
     "car_accident": 0.85,
     "fire_explosion": 0.6,
-    "shooting": 0.6,
+    "shooting": 0.5,  # the threat model's gun confidences sit around 0.4 to 0.55
     "unsupervised": 0.6,
 }
 

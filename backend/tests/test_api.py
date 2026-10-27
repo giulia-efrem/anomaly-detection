@@ -215,7 +215,8 @@ def test_camera_crud_stream_and_snapshot(client: httpx.Client, base: str, sample
     # Detection settings
     r = client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fight": 0.7}, "supervised": "off"})
     assert r.status_code == 200
-    assert r.json()["thresholds"]["fight"] == 0.7 and r.json()["thresholds"]["shooting"] == 0.6
+    assert r.json()["thresholds"]["fight"] == 0.7
+    assert r.json()["thresholds"]["shooting"] == config.DEFAULT_THRESHOLDS["shooting"]
     assert r.json()["supervised"] == "off"
     assert client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fight": 1.5}}).status_code == 422
     assert client.patch(f"/api/cameras/{cam['id']}", json={"thresholds": {"fall": 0.5}}).status_code == 422

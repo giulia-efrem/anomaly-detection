@@ -47,9 +47,9 @@ REELS = [
         "clips": ["fire-bus", "explosion-gas-cylinder", "explosion-balloon", "fire-car-riot"],
     },
     {
-        "camera_id": "armed", "name": "Pistol range and office", "dataset": "veghe-demo", "key": "reel-guns",
-        "title": "Handguns: pistol range, then an office robbery",
-        "clips": ["gun-pistol-range", "gun-office-robbery"],
+        "camera_id": "armed", "name": "Shooting ranges and office", "dataset": "veghe-demo", "key": "reel-guns",
+        "title": "Handguns: two shooting ranges, then an office robbery",
+        "clips": ["gun-range-handheld", "gun-pistol-range", "gun-office-robbery"],
     },
     {
         "camera_id": "office", "name": "Office", "dataset": "ur-fall", "key": "reel-office",

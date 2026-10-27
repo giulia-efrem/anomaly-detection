@@ -419,11 +419,12 @@ class NormalityModel:
             img = cv2.resize(background, (width, h))
         img = (img * 0.45).astype(np.uint8)
         if grid.max() > 0:
+            # One hue (the scene normality blue), stronger where things appear more often.
             norm = np.sqrt(grid / grid.max())  # square root keeps rare cells visible
-            up = cv2.resize(norm, (width, h), interpolation=cv2.INTER_NEAREST)
-            colored = cv2.applyColorMap((up * 255).astype(np.uint8), cv2.COLORMAP_TURBO)
-            mask = (up > 0)[..., None]
-            img = np.where(mask, cv2.addWeighted(img, 0.35, colored, 0.65, 0), img)
+            up = cv2.resize(norm, (width, h), interpolation=cv2.INTER_NEAREST)[..., None]
+            blue = np.array([242, 169, 90], np.float32)  # BGR of #5AA9F2
+            alpha = np.where(up > 0, 0.2 + 0.65 * up, 0.0)
+            img = (img * (1 - alpha) + blue * alpha).astype(np.uint8)
         for i in range(1, GRID_W):
             x = int(i * width / GRID_W)
             cv2.line(img, (x, 0), (x, h), (50, 60, 75), 1)

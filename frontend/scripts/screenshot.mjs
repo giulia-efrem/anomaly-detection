@@ -62,7 +62,16 @@ try {
       await page.waitForTimeout(300)
       await page.screenshot({ path: join(outDir, 'camera-dialog-1440.png') })
       await page.keyboard.press('Escape')
+      // Detection settings of a scene camera: thresholds and the normality heatmap.
+      await page.getByRole('button', { name: 'Detection' }).nth(6).click()
+      await page.waitForTimeout(1500)
+      await page.screenshot({ path: join(outDir, 'detection-dialog-1440.png') })
+      await page.keyboard.press('Escape')
     }
+
+    await page.goto(base + '/training', { waitUntil: 'networkidle' })
+    await page.waitForTimeout(500)
+    await shoot(page, 'training', width)
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     console.log(`${width}px: horizontal overflow ${overflow}px`)

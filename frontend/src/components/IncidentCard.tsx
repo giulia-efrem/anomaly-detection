@@ -84,9 +84,9 @@ export default function IncidentCard({ incident, camera, onDecide, onNormal, sho
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="flex min-w-0 items-center gap-2 text-[16px] leading-6 font-semibold">
-              <Icon size={16} aria-hidden="true" className="shrink-0" style={{ color: typeColor(incident.type) }} />
-              <span className="truncate">{label}</span>
+            <h3 className="flex min-w-0 items-start gap-2 text-[16px] leading-6 font-semibold">
+              <Icon size={16} aria-hidden="true" className="mt-1 shrink-0" style={{ color: typeColor(incident.type) }} />
+              <span>{label}</span>
             </h3>
             <time className="shrink-0 font-cond text-[13px] text-muted">
               {showDate ? dayAndTime(incident.ended_at) : clockTime(incident.ended_at)}
@@ -96,14 +96,12 @@ export default function IncidentCard({ incident, camera, onDecide, onNormal, sho
             <span className="font-semibold text-ink">{camera?.name ?? 'Removed camera'}</span>{' '}
             <span className="font-cond text-muted">{incident.camera_id}</span>
           </div>
-          <div className="mt-2 flex flex-wrap gap-1">
-            <Chip>{RAISED_BY_LABELS[incident.raised_by]}</Chip>
-            {supervised && (
-              <Chip dot="var(--color-sup)" title={CLASS_MODELS[incident.type as keyof typeof CLASS_MODELS]}>
-                Pretrained
-              </Chip>
-            )}
-          </div>
+          <Chip
+            className="mt-2"
+            title={supervised ? `Pretrained model: ${CLASS_MODELS[incident.type as keyof typeof CLASS_MODELS]}` : undefined}
+          >
+            {RAISED_BY_LABELS[incident.raised_by]}
+          </Chip>
         </div>
       </div>
 

@@ -456,16 +456,16 @@
     {
       "id": "veghe-demo",
       "name": "Veghe demo clips (Wikimedia Commons)",
-      "description": "Nine short public clips picked to demonstrate the pretrained detectors: three car collisions (two street CCTV, one dashcam), four fires or explosions and two scenes with handguns. Every clip is public domain, CC0 or Creative Commons with attribution; the author and license of each clip are listed below. Real attacks and crashes with victims were left out on purpose. 480p versions, about 3 minutes in total.",
+      "description": "Ten short public clips picked to demonstrate the pretrained detectors: three car collisions (two street CCTV, one dashcam), four fires or explosions and three scenes with handguns. Every clip is public domain, CC0 or Creative Commons with attribution; the author and license of each clip are listed below. Real attacks and crashes with victims were left out on purpose. 480p versions, about 4 minutes in total.",
       "anomaly_types": [
         "car_accident",
         "fire_explosion",
         "shooting"
       ],
       "has_normal": false,
-      "clip_count": 9,
-      "size_bytes": 57609699,
-      "license": "Per clip: public domain, CC0, CC BY 3.0 or CC BY-SA 4.0",
+      "clip_count": 10,
+      "size_bytes": 67725997,
+      "license": "Per clip: public domain, CC0, CC BY 2.0, CC BY 3.0 or CC BY-SA 4.0",
       "license_url": "https://commons.wikimedia.org/wiki/Commons:Licensing",
       "source_url": "https://commons.wikimedia.org/",
       "citation": "Credit each author as listed per clip (Wikimedia Commons file pages).",
@@ -594,6 +594,19 @@
             "license": "Public domain",
             "author": "Los Angeles Police Department",
             "page_url": "https://commons.wikimedia.org/wiki/File:Robbery_Suspects_Caught_on_Surveillance_Camera.webm"
+          },
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/6/67/Shooting_Range_Nokia_E71.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "name": "gun-range-handheld.webm",
+            "size_bytes": 10116298,
+            "key": "gun-range-handheld",
+            "title": "Shooting range, handheld phone: pistols in hand",
+            "anomaly_types": [
+              "shooting"
+            ],
+            "license": "CC BY 2.0",
+            "author": "Mark Guim",
+            "page_url": "https://commons.wikimedia.org/wiki/File:Shooting_Range_Nokia_E71.webm"
           }
         ]
       }
