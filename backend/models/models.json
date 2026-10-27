@@ -1,0 +1,102 @@
+{
+  "verified_at": "2026-10-27",
+  "notes": "Every link was checked on verified_at. Hugging Face downloads are pinned to a commit and checked against the LFS SHA-256. Weights land in data/models/ (gitignored). Details and preprocessing in MODELS.md.",
+  "models": [
+    {
+      "id": "yolo11s",
+      "name": "YOLO11s (COCO)",
+      "role": "Object detection and tracking for the scene normality model; tells the pipeline when people, vehicles or crowds are present",
+      "family": "base",
+      "classes": [
+        "80 COCO classes"
+      ],
+      "file": "yolo11s.pt",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt",
+      "size_bytes": 19313732,
+      "sha256": "85a76fe86dd8afe384648546b56a7a78580c7cb7b404fc595f97969322d502d5",
+      "license": "AGPL-3.0",
+      "license_url": "https://github.com/ultralytics/ultralytics/blob/main/LICENSE",
+      "source_url": "https://docs.ultralytics.com/models/yolo11/"
+    },
+    {
+      "id": "yolo11n-pose",
+      "name": "YOLO11n pose (COCO keypoints)",
+      "role": "17 body keypoints per person for the unusual posture branch",
+      "family": "base",
+      "classes": [
+        "person keypoints"
+      ],
+      "file": "yolo11n-pose.pt",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-pose.pt",
+      "size_bytes": 6255593,
+      "sha256": "869e83fcdffdc7371fa4e34cd8e51c838cc729571d1635e5141e3075e9319dc0",
+      "license": "AGPL-3.0",
+      "license_url": "https://github.com/ultralytics/ultralytics/blob/main/LICENSE",
+      "source_url": "https://docs.ultralytics.com/tasks/pose/"
+    },
+    {
+      "id": "fight-x3d",
+      "name": "X3D-M violence detector (RWF-2000)",
+      "role": "Fight",
+      "family": "pretrained",
+      "classes": [
+        "fight"
+      ],
+      "file": "fight_x3d_m_rwf2000.pt",
+      "url": "https://huggingface.co/visionlab-ai/school-violence-detection-models/resolve/a744b6af7496f0cbfa4f0ba32acd46b65e52d4e1/final/final_x3d_realtime.pt",
+      "size_bytes": 12268364,
+      "sha256": "e833f69d110f167cad4a6c38d385564bdb2f6de63d246e45cb03ff9aa17f0349",
+      "license": "MIT",
+      "license_url": "https://huggingface.co/visionlab-ai/school-violence-detection-models",
+      "source_url": "https://huggingface.co/visionlab-ai/school-violence-detection-models"
+    },
+    {
+      "id": "crash-r3d18",
+      "name": "3D ResNet-18 crash detector",
+      "role": "Car accident",
+      "family": "pretrained",
+      "classes": [
+        "car_accident"
+      ],
+      "file": "crash_r3d18_jit.pt",
+      "url": "https://huggingface.co/HaniaRuby/crash-detector-3dresnet/resolve/8b7b8b8d69a8550296f652231cc36e8614053e76/crash_detector_3dresnet_jit.pt",
+      "size_bytes": 132878421,
+      "sha256": "e7ad75581457b2302a6f4e75865afc120952d7b94e0aeb5690d17b227a4d50dc",
+      "license": "MIT",
+      "license_url": "https://huggingface.co/HaniaRuby/crash-detector-3dresnet",
+      "source_url": "https://huggingface.co/HaniaRuby/crash-detector-3dresnet"
+    },
+    {
+      "id": "fire-yolov8n",
+      "name": "YOLOv8n fire and smoke (D-Fire)",
+      "role": "Fire and explosion",
+      "family": "pretrained",
+      "classes": [
+        "fire_explosion"
+      ],
+      "file": "fire_smoke_yolov8n.pt",
+      "url": "https://huggingface.co/rabahdev/fire-smoke-yolov8n/resolve/13017fe8af477c25f5298d168e2dfede4b000753/best.pt",
+      "size_bytes": 6229802,
+      "sha256": "b91633799ceb052c814b4f8b77a37efc9a40f002d528df97d74463585fa4f28f",
+      "license": "AGPL-3.0",
+      "license_url": "https://huggingface.co/rabahdev/fire-smoke-yolov8n",
+      "source_url": "https://huggingface.co/rabahdev/fire-smoke-yolov8n"
+    },
+    {
+      "id": "threat-yolov8n",
+      "name": "YOLOv8n threat detector (gun, explosive, grenade, knife)",
+      "role": "Shooting",
+      "family": "pretrained",
+      "classes": [
+        "shooting"
+      ],
+      "file": "threat_yolov8n.pt",
+      "url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n/resolve/c6d6fa4e6c9bfd4c4fccb46478db23609e5468fb/weights/best.pt",
+      "size_bytes": 6251747,
+      "sha256": "86c43444ae8319d2276dd300edc3e7f7a1137fe7566737f994ca579ad770f6ce",
+      "license": "MIT (weights; trained with AGPL-3.0 Ultralytics)",
+      "license_url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n",
+      "source_url": "https://huggingface.co/Subh775/Threat-Detection-YOLOv8n"
+    }
+  ]
+}

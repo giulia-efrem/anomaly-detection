@@ -2,6 +2,7 @@
 
 from .cameras import CameraManager
 from .events import bus
+from .pipeline import Pipeline
 
 
 def _on_camera_status(camera_id: str, status: str) -> None:
@@ -9,3 +10,4 @@ def _on_camera_status(camera_id: str, status: str) -> None:
 
 
 cameras = CameraManager(on_status=_on_camera_status)
+pipeline = Pipeline(cameras)

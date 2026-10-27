@@ -4,7 +4,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-IncidentType = Literal["fight", "fall", "unusual_posture", "other"]
+IncidentType = Literal[
+    "fight", "car_accident", "fire_explosion", "shooting",
+    "unusual_object", "unusual_motion", "unusual_posture", "loitering", "crowding", "other",
+]
+ThresholdKey = Literal["fight", "car_accident", "fire_explosion", "shooting", "unsupervised"]
 RaisedBy = Literal["supervised", "unsupervised", "both"]
 IncidentStatus = Literal["needs_review", "confirmed", "false_alarm"]
 SourceType = Literal["rtsp", "webcam", "file"]
@@ -34,6 +38,10 @@ class Incident(BaseModel):
     caption: str | None
     clip_url: str | None
     status: IncidentStatus
+    # Beyond the contract
+    thumbnail_url: str | None
+    reason: str | None  # scene normality reason when that model contributed
+    details: dict
 
 
 class IncidentPatch(BaseModel):
@@ -56,6 +64,8 @@ class Camera(BaseModel):
     library_video_id: str | None
     status: StreamStatus
     position: int
+    thresholds: dict[str, float]  # every class, defaults filled in
+    learn_seconds: float
 
 
 class CameraCreate(BaseModel):
@@ -72,6 +82,16 @@ class CameraUpdate(BaseModel):
     source: str | None = Field(default=None, max_length=1000)
     library_video_id: str | None = None
     position: int | None = None
+    supervised: Literal["on", "off"] | None = None
+    unsupervised: Literal["learning", "off"] | None = None  # "learning" turns scene normality back on
+    thresholds: dict[ThresholdKey, float] | None = None
+    learn_seconds: float | None = Field(default=None, ge=10, le=24 * 3600)
+
+
+class LearnRequest(BaseModel):
+    """Add a normal library clip to a camera's scene normality model."""
+
+    library_video_id: str
 
 
 class LibraryVideo(BaseModel):

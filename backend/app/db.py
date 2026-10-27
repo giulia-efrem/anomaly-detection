@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS cameras (
   unsupervised TEXT NOT NULL DEFAULT 'collecting'
     CHECK (unsupervised IN ('collecting', 'learning', 'ready', 'off')),
   learning_progress REAL,
+  learn_seconds REAL NOT NULL DEFAULT 600,
+  thresholds TEXT NOT NULL DEFAULT '{}',
   position INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
@@ -50,7 +52,7 @@ CREATE TABLE IF NOT EXISTS cameras (
 CREATE TABLE IF NOT EXISTS incidents (
   id TEXT PRIMARY KEY,
   camera_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('fight', 'fall', 'unusual_posture', 'other')),
+  type TEXT NOT NULL CHECK (type IN (INCIDENT_TYPES)),
   started_at TEXT NOT NULL,
   ended_at TEXT NOT NULL,
   alarm_count INTEGER NOT NULL DEFAULT 1,
@@ -61,6 +63,9 @@ CREATE TABLE IF NOT EXISTS incidents (
   threshold_unsupervised REAL NOT NULL,
   caption TEXT,
   clip_url TEXT,
+  thumbnail_url TEXT,
+  reason TEXT,
+  details TEXT NOT NULL DEFAULT '{}',
   status TEXT NOT NULL DEFAULT 'needs_review'
     CHECK (status IN ('needs_review', 'confirmed', 'false_alarm')),
   updated_at TEXT NOT NULL
@@ -68,7 +73,27 @@ CREATE TABLE IF NOT EXISTS incidents (
 
 CREATE INDEX IF NOT EXISTS incidents_status ON incidents(status);
 CREATE INDEX IF NOT EXISTS incidents_camera ON incidents(camera_id);
+
+-- Review decisions kept as labels for retraining. "normal" = the user said "This is normal".
+CREATE TABLE IF NOT EXISTS feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  incident_id TEXT NOT NULL,
+  camera_id TEXT NOT NULL,
+  label TEXT NOT NULL CHECK (label IN ('confirmed', 'false_alarm', 'normal')),
+  incident_type TEXT NOT NULL,
+  raised_by TEXT NOT NULL,
+  clip_path TEXT,
+  created_at TEXT NOT NULL
+);
 """
+
+SUPERVISED_TYPES = ("fight", "car_accident", "fire_explosion", "shooting")
+UNSUPERVISED_TYPES = ("unusual_object", "unusual_motion", "unusual_posture", "loitering", "crowding")
+INCIDENT_TYPE_LIST = SUPERVISED_TYPES + UNSUPERVISED_TYPES + ("other",)
+SCHEMA = SCHEMA.replace("INCIDENT_TYPES", ", ".join(f"'{t}'" for t in INCIDENT_TYPE_LIST))
+
+# The four step 1 examples; real incidents replace them from step 3 on.
+MOCK_INCIDENT_IDS = ("inc-0138", "inc-0139", "inc-0140", "inc-0141")
 
 
 def now_iso() -> str:
@@ -92,6 +117,38 @@ def init() -> None:
     with connect() as conn:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
+        _migrate(conn)
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Bring a step 2 database up to date. Safe to run on every start."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(cameras)")}
+    if "learn_seconds" not in cols:
+        conn.execute(f"ALTER TABLE cameras ADD COLUMN learn_seconds REAL NOT NULL DEFAULT {config.LEARN_SECONDS:g}")
+    if "thresholds" not in cols:
+        conn.execute("ALTER TABLE cameras ADD COLUMN thresholds TEXT NOT NULL DEFAULT '{}'")
+    sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = 'incidents'").fetchone()["sql"]
+    if "car_accident" not in sql:
+        # SQLite cannot change a CHECK constraint: rebuild the table with the new incident types.
+        old_cols = {r["name"] for r in conn.execute("PRAGMA table_info(incidents)")}
+        conn.execute("ALTER TABLE incidents RENAME TO incidents_old")
+        conn.execute("DROP INDEX IF EXISTS incidents_status")
+        conn.execute("DROP INDEX IF EXISTS incidents_camera")
+        conn.executescript(SCHEMA)
+        keep = [r["name"] for r in conn.execute("PRAGMA table_info(incidents)") if r["name"] in old_cols]
+        types = ", ".join(f"'{t}'" for t in INCIDENT_TYPE_LIST)
+        mock = ", ".join(f"'{i}'" for i in MOCK_INCIDENT_IDS)
+        conn.execute(
+            f"INSERT INTO incidents ({', '.join(keep)}) SELECT {', '.join(keep)} FROM incidents_old "
+            f"WHERE type IN ({types}) AND id NOT IN ({mock})"
+        )
+        conn.execute("DROP TABLE incidents_old")
+    conn.execute("UPDATE cameras SET unsupervised = 'learning', learning_progress = 0 "
+                 "WHERE unsupervised = 'collecting'")
+    if conn.execute("SELECT 1 FROM meta WHERE key = 'models_enabled'").fetchone() is None:
+        # Step 2 cameras were created before any model existed; switch the detectors on once.
+        conn.execute("UPDATE cameras SET supervised = 'on'")
+        conn.execute("INSERT INTO meta (key, value) VALUES ('models_enabled', ?)", (now_iso(),))
 
 
 def get_meta(key: str) -> str | None:
@@ -112,25 +169,34 @@ def set_meta(key: str, value: str) -> None:
 # --- cameras -----------------------------------------------------------------
 
 CAMERA_COLUMNS = (
-    "id", "name", "source_type", "source", "library_video_id",
-    "supervised", "unsupervised", "learning_progress", "position", "created_at",
+    "id", "name", "source_type", "source", "library_video_id", "supervised", "unsupervised",
+    "learning_progress", "learn_seconds", "thresholds", "position", "created_at",
 )
+
+
+def _camera_row(row: sqlite3.Row) -> dict[str, Any]:
+    d = dict(row)
+    d["thresholds"] = json.loads(d.get("thresholds") or "{}")
+    return d
 
 
 def list_cameras() -> list[dict[str, Any]]:
     with connect() as conn:
         rows = conn.execute("SELECT * FROM cameras ORDER BY position, created_at").fetchall()
-    return [dict(r) for r in rows]
+    return [_camera_row(r) for r in rows]
 
 
 def get_camera(camera_id: str) -> dict[str, Any] | None:
     with connect() as conn:
         row = conn.execute("SELECT * FROM cameras WHERE id = ?", (camera_id,)).fetchone()
-    return dict(row) if row else None
+    return _camera_row(row) if row else None
 
 
 def insert_camera(values: dict[str, Any]) -> None:
-    values = {"created_at": now_iso(), **values}
+    values = {"created_at": now_iso(), "supervised": "on", "unsupervised": "learning", "learning_progress": 0.0,
+              **values}
+    if isinstance(values.get("thresholds"), dict):
+        values["thresholds"] = json.dumps(values["thresholds"])
     cols = [c for c in CAMERA_COLUMNS if c in values]
     with connect() as conn:
         if "position" not in values:
@@ -145,6 +211,8 @@ def insert_camera(values: dict[str, Any]) -> None:
 
 
 def update_camera(camera_id: str, values: dict[str, Any]) -> None:
+    if isinstance(values.get("thresholds"), dict):
+        values = {**values, "thresholds": json.dumps(values["thresholds"])}
     cols = [c for c in values if c in CAMERA_COLUMNS and c != "id"]
     if not cols:
         return
@@ -187,15 +255,19 @@ def incident_from_row(row: sqlite3.Row) -> dict[str, Any]:
         },
         "caption": row["caption"],
         "clip_url": row["clip_url"],
+        "thumbnail_url": row["thumbnail_url"],
+        "reason": row["reason"],
+        "details": json.loads(row["details"] or "{}"),
         "status": row["status"],
     }
 
 
 def list_incidents(
-    status: str | None = None, camera_id: str | None = None, raised_by: str | None = None
+    status: str | None = None, camera_id: str | None = None, raised_by: str | None = None,
+    type: str | None = None,
 ) -> list[dict[str, Any]]:
     where, args = [], []
-    for col, val in (("status", status), ("camera_id", camera_id), ("raised_by", raised_by)):
+    for col, val in (("status", status), ("camera_id", camera_id), ("raised_by", raised_by), ("type", type)):
         if val:
             where.append(f"{col} = ?")
             args.append(val)
@@ -213,19 +285,45 @@ def get_incident(incident_id: str) -> dict[str, Any] | None:
     return incident_from_row(row) if row else None
 
 
-def insert_incident(i: dict[str, Any]) -> None:
+def save_incident(i: dict[str, Any]) -> None:
+    """Insert an incident, or update it while it grows. The review status is never overwritten."""
     with connect() as conn:
         conn.execute(
             "INSERT INTO incidents (id, camera_id, type, started_at, ended_at, alarm_count, raised_by, "
             "score_supervised, score_unsupervised, threshold_supervised, threshold_unsupervised, "
-            "caption, clip_url, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "caption, clip_url, thumbnail_url, reason, details, status, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET type = excluded.type, ended_at = excluded.ended_at, "
+            "alarm_count = excluded.alarm_count, raised_by = excluded.raised_by, "
+            "score_supervised = excluded.score_supervised, score_unsupervised = excluded.score_unsupervised, "
+            "threshold_supervised = excluded.threshold_supervised, "
+            "threshold_unsupervised = excluded.threshold_unsupervised, caption = excluded.caption, "
+            "clip_url = excluded.clip_url, thumbnail_url = excluded.thumbnail_url, reason = excluded.reason, "
+            "details = excluded.details, updated_at = excluded.updated_at",
             (
                 i["id"], i["camera_id"], i["type"], i["started_at"], i["ended_at"], i["alarm_count"],
                 i["raised_by"], i["scores"]["supervised"], i["scores"]["unsupervised"],
                 i["thresholds"]["supervised"], i["thresholds"]["unsupervised"],
-                i.get("caption"), i.get("clip_url"), i.get("status", "needs_review"), now_iso(),
+                i.get("caption"), i.get("clip_url"), i.get("thumbnail_url"), i.get("reason"),
+                json.dumps(i.get("details") or {}), i.get("status", "needs_review"), now_iso(),
             ),
         )
+
+
+def add_feedback(incident: dict[str, Any], label: str, clip_path: str | None) -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO feedback (incident_id, camera_id, label, incident_type, raised_by, clip_path, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (incident["id"], incident["camera_id"], label, incident["type"], incident["raised_by"], clip_path,
+             now_iso()),
+        )
+
+
+def feedback_counts() -> dict[str, int]:
+    with connect() as conn:
+        rows = conn.execute("SELECT label, COUNT(*) AS n FROM feedback GROUP BY label").fetchall()
+    return {r["label"]: r["n"] for r in rows}
 
 
 def set_incident_status(incident_id: str, status: str) -> bool:

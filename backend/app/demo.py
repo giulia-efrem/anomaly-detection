@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 
-from . import config, db, library, media, seed
+from . import config, db, library, media
 
 log = logging.getLogger("veghe.demo")
 
@@ -97,7 +97,6 @@ def build_reel(reel: dict) -> str:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     db.init()
-    seed.seed_incidents()
     for d in DATASETS:
         ensure_dataset(d)
     for cam in db.list_cameras():

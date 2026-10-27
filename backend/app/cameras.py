@@ -40,6 +40,8 @@ class FrameBuffer:
 
     def __init__(self, maxlen: int = config.FRAME_BUFFER_SIZE) -> None:
         self._frames: deque[Frame] = deque(maxlen=maxlen)
+        # JPEGs only, long enough for the seconds before an alert in an incident clip.
+        self._history: deque[tuple[float, bytes]] = deque(maxlen=int(config.STREAM_FPS * config.JPEG_HISTORY_SECONDS))
         self._cond = threading.Condition()
         self._seq = 0
 
@@ -48,8 +50,14 @@ class FrameBuffer:
             self._seq += 1
             frame = Frame(self._seq, time.time(), image, jpeg)
             self._frames.append(frame)
+            self._history.append((frame.timestamp, jpeg))
             self._cond.notify_all()
             return frame
+
+    def jpegs_since(self, ts: float) -> list[tuple[float, bytes]]:
+        """(timestamp, JPEG) of every stream frame after `ts` still in the history, oldest first."""
+        with self._cond:
+            return [item for item in self._history if item[0] > ts]
 
     def latest(self) -> Frame | None:
         with self._cond:
@@ -69,6 +77,7 @@ class FrameBuffer:
     def clear(self) -> None:
         with self._cond:
             self._frames.clear()
+            self._history.clear()
 
 
 def resolve_file_source(source: str) -> Path:
